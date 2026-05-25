@@ -14,6 +14,7 @@ import Connexion from "@/pages/connexion";
 import Inscription from "@/pages/inscription";
 import TableauDeBord from "@/pages/tableau-de-bord";
 import Profil from "@/pages/profil";
+import Admin from "@/pages/admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ function Router() {
         <Route path="/inscription" component={Inscription} />
         <Route path="/tableau-de-bord" component={TableauDeBord} />
         <Route path="/profil/:id" component={Profil} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

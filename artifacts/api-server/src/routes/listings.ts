@@ -158,6 +158,7 @@ router.post("/listings", requireAuth, async (req, res): Promise<void> => {
       category,
       city,
       photos: photos ?? [],
+      status: "pending",
       userId: req.userId!,
     })
     .returning();

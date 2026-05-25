@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Box } from "lucide-react";
+import { MapPin, Calendar, Box, MessageCircle, Phone } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -61,6 +61,29 @@ export default function Profil() {
               <Calendar className="w-4 h-4" />
               <span>Membre depuis {format(new Date(user.createdAt), "MMMM yyyy", { locale: fr })}</span>
             </div>
+          </div>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-4">
+            {user.whatsapp && (
+              <a
+                href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="profil-whatsapp"
+              >
+                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
+                </Button>
+              </a>
+            )}
+            {user.phone && (
+              <a href={`tel:${user.phone}`} data-testid="profil-phone">
+                <Button size="sm" variant="outline" className="gap-2">
+                  <Phone className="w-4 h-4" />
+                  {user.phone}
+                </Button>
+              </a>
+            )}
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCreateListing } from "@workspace/api-client-react";
+import { useCreateListing, getGetMyListingsQueryKey } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { PhotoUploader } from "@/components/photo-uploader";
+import { Info } from "lucide-react";
 
 const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin"];
 const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
@@ -23,7 +25,6 @@ const publishSchema = z.object({
   price: z.coerce.number().optional(),
   category: z.string().min(1, "Veuillez sélectionner une catégorie."),
   city: z.string().min(1, "Veuillez sélectionner une ville."),
-  photos: z.string().optional(),
 });
 
 type PublishFormValues = z.infer<typeof publishSchema>;
@@ -32,6 +33,7 @@ export default function Publier() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
+  const [photos, setPhotos] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -50,20 +52,18 @@ export default function Publier() {
       description: "",
       category: "",
       city: "",
-      photos: "",
     },
   });
 
   const createListingMutation = useCreateListing({
     mutation: {
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/listings/my-listings"] });
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetMyListingsQueryKey() });
         toast({
-          title: "Annonce publiée !",
-          description: "Votre annonce est maintenant en ligne.",
+          title: "Annonce envoyée en modération",
+          description: "Votre annonce sera publiée après validation par notre équipe.",
         });
-        setLocation(`/annonces/${data.id}`);
+        setLocation("/tableau-de-bord");
       },
       onError: (error: any) => {
         toast({
@@ -76,10 +76,6 @@ export default function Publier() {
   });
 
   const onSubmit = (data: PublishFormValues) => {
-    const photosArray = data.photos 
-      ? data.photos.split(",").map(url => url.trim()).filter(url => url.length > 0)
-      : [];
-
     createListingMutation.mutate({
       data: {
         title: data.title,
@@ -87,7 +83,7 @@ export default function Publier() {
         price: data.price ? Number(data.price) : undefined,
         category: data.category,
         city: data.city,
-        photos: photosArray.length > 0 ? photosArray : undefined,
+        photos: photos.length > 0 ? photos : undefined,
       }
     });
   };
@@ -102,6 +98,14 @@ export default function Publier() {
           <CardDescription>Remplissez les informations ci-dessous pour mettre votre bien en ligne.</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Moderation notice */}
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-800">
+              <strong>Modération :</strong> Votre annonce sera vérifiée par notre équipe avant d'être visible sur la plateforme. Délai habituel : quelques heures.
+            </div>
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -166,7 +170,7 @@ export default function Publier() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prix (XOF)</FormLabel>
+                      <FormLabel>Prix (FCFA)</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="Ex: 500000" {...field} data-testid="input-price" />
                       </FormControl>
@@ -175,7 +179,7 @@ export default function Publier() {
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="hidden md:block"></div>
 
                 <FormField
@@ -185,11 +189,11 @@ export default function Publier() {
                     <FormItem className="md:col-span-2">
                       <FormLabel>Description *</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Décrivez votre bien en détail..." 
+                        <Textarea
+                          placeholder="Décrivez votre bien en détail (état, caractéristiques, conditions de vente...)"
                           className="min-h-[150px]"
-                          {...field} 
-                          data-testid="input-description" 
+                          {...field}
+                          data-testid="input-description"
                         />
                       </FormControl>
                       <FormMessage />
@@ -197,30 +201,30 @@ export default function Publier() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="photos"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>URLs des photos (séparées par des virgules)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://..., https://..." {...field} data-testid="input-photos" />
-                      </FormControl>
-                      <FormDescription>
-                        Pour cet exercice, veuillez fournir des URLs d'images valides.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="md:col-span-2">
+                  <FormLabel>Photos (jusqu'à 10)</FormLabel>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    La première photo sera utilisée comme photo principale. Formats acceptés : JPG, PNG, WebP.
+                  </p>
+                  <PhotoUploader
+                    photos={photos}
+                    onChange={setPhotos}
+                    maxPhotos={10}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end pt-4 border-t gap-4">
                 <Button type="button" variant="outline" onClick={() => setLocation("/")}>
                   Annuler
                 </Button>
-                <Button type="submit" disabled={createListingMutation.isPending} data-testid="button-submit">
-                  {createListingMutation.isPending ? "Publication..." : "Publier l'annonce"}
+                <Button
+                  type="submit"
+                  disabled={createListingMutation.isPending}
+                  className="bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0"
+                  data-testid="button-submit"
+                >
+                  {createListingMutation.isPending ? "Publication..." : "Soumettre l'annonce"}
                 </Button>
               </div>
             </form>

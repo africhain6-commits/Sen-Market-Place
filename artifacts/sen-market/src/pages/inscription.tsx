@@ -21,6 +21,7 @@ const registerSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères."),
   phone: z.string().optional(),
+  whatsapp: z.string().optional(),
   city: z.string().optional(),
 });
 
@@ -37,6 +38,7 @@ export default function Inscription() {
       email: "",
       password: "",
       phone: "",
+      whatsapp: "",
       city: "",
     },
   });
@@ -121,7 +123,20 @@ export default function Inscription() {
                   <FormItem>
                     <FormLabel>Téléphone (Optionnel)</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="+221 XX XXX XX XX" {...field} data-testid="input-phone" />
+                      <Input type="tel" placeholder="+221 77 000 00 00" {...field} data-testid="input-phone" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WhatsApp (Optionnel)</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="+221 77 000 00 00" {...field} data-testid="input-whatsapp" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

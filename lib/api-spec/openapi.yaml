@@ -17,6 +17,10 @@ tags:
     description: Messaging operations
   - name: users
     description: User profile operations
+  - name: admin
+    description: Admin operations
+  - name: storage
+    description: File upload operations
 paths:
   /healthz:
     get:
@@ -394,6 +398,135 @@ paths:
         "403":
           description: Forbidden
 
+  /admin/listings:
+    get:
+      operationId: adminGetListings
+      tags: [admin]
+      summary: Get all listings for admin (all statuses)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Listing"
+        "403":
+          description: Forbidden
+
+  /admin/listings/{id}/approve:
+    patch:
+      operationId: adminApproveListing
+      tags: [admin]
+      summary: Approve a listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Listing"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /admin/listings/{id}/reject:
+    patch:
+      operationId: adminRejectListing
+      tags: [admin]
+      summary: Reject a listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Listing"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: Get all users for admin
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+
+  /admin/users/{id}/ban:
+    patch:
+      operationId: adminBanUser
+      tags: [admin]
+      summary: Ban a user (delete all their listings)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     HealthStatus:
@@ -423,16 +556,21 @@ components:
           type: string
         phone:
           type: ["string", "null"]
+        whatsapp:
+          type: ["string", "null"]
         city:
           type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
+        isAdmin:
+          type: boolean
         createdAt:
           type: string
       required:
         - id
         - email
         - name
+        - isAdmin
         - createdAt
 
     RegisterInput:
@@ -445,6 +583,8 @@ components:
         name:
           type: string
         phone:
+          type: string
+        whatsapp:
           type: string
         city:
           type: string
@@ -481,6 +621,8 @@ components:
         name:
           type: string
         phone:
+          type: string
+        whatsapp:
           type: string
         city:
           type: string
@@ -656,3 +798,28 @@ components:
         - listingId
         - otherUser
         - unreadCount
+
+    RequestUploadUrlBody:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+      required:
+        - name
+        - size
+        - contentType
+
+    RequestUploadUrlResponse:
+      type: object
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+      required:
+        - uploadURL
+        - objectPath

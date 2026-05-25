@@ -6,11 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RegisterInput {
-  email: string;
-  password: string;
-  name: string;
-  phone?: string;
-  whatsapp?: string;
-  city?: string;
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
 }

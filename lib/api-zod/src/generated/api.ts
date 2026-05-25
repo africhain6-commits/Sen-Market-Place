@@ -24,6 +24,7 @@ export const RegisterBody = zod.object({
   "password": zod.string(),
   "name": zod.string(),
   "phone": zod.string().optional(),
+  "whatsapp": zod.string().optional(),
   "city": zod.string().optional()
 })
 
@@ -42,8 +43,10 @@ export const LoginResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }),
   "message": zod.string()
@@ -66,8 +69,10 @@ export const GetMeResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 })
 
@@ -101,8 +106,10 @@ export const GetListingsResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -155,8 +162,10 @@ export const GetFeaturedListingsResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -187,8 +196,10 @@ export const GetListingResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -228,8 +239,10 @@ export const UpdateListingResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -267,8 +280,10 @@ export const GetMyListingsResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -297,8 +312,10 @@ export const GetConversationsResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string(),
@@ -309,8 +326,10 @@ export const GetConversationsResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }),
   "lastMessage": zod.object({
@@ -324,8 +343,10 @@ export const GetConversationsResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string()
@@ -354,8 +375,10 @@ export const GetConversationResponseItem = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 }).optional(),
   "createdAt": zod.string()
@@ -385,8 +408,10 @@ export const GetUserResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
 })
 
@@ -401,6 +426,7 @@ export const UpdateUserParams = zod.object({
 export const UpdateUserBody = zod.object({
   "name": zod.string().optional(),
   "phone": zod.string().optional(),
+  "whatsapp": zod.string().optional(),
   "city": zod.string().optional(),
   "avatarUrl": zod.string().optional()
 })
@@ -410,9 +436,155 @@ export const UpdateUserResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
   "city": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get all listings for admin (all statuses)
+ */
+export const AdminGetListingsQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const AdminGetListingsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const AdminGetListingsResponse = zod.array(AdminGetListingsResponseItem)
+
+
+/**
+ * @summary Approve a listing
+ */
+export const AdminApproveListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminApproveListingResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Reject a listing
+ */
+export const AdminRejectListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminRejectListingResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get all users for admin
+ */
+export const AdminGetUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const AdminGetUsersResponse = zod.array(AdminGetUsersResponseItem)
+
+
+/**
+ * @summary Ban a user (delete all their listings)
+ */
+export const AdminBanUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminBanUserResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
 })
 
 

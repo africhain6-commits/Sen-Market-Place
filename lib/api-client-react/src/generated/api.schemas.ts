@@ -20,9 +20,12 @@ export interface User {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
   city?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  isAdmin: boolean;
   createdAt: string;
 }
 
@@ -31,6 +34,7 @@ export interface RegisterInput {
   password: string;
   name: string;
   phone?: string;
+  whatsapp?: string;
   city?: string;
 }
 
@@ -47,6 +51,7 @@ export interface AuthResponse {
 export interface UserUpdate {
   name?: string;
   phone?: string;
+  whatsapp?: string;
   city?: string;
   avatarUrl?: string;
 }
@@ -122,6 +127,17 @@ export interface Conversation {
   unreadCount: number;
 }
 
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
 export type GetListingsParams = {
 category?: string;
 city?: string;
@@ -130,5 +146,9 @@ maxPrice?: number;
 search?: string;
 page?: number;
 limit?: number;
+};
+
+export type AdminGetListingsParams = {
+status?: string;
 };
 

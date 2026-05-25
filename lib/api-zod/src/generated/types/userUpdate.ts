@@ -9,6 +9,7 @@
 export interface UserUpdate {
   name?: string;
   phone?: string;
+  whatsapp?: string;
   city?: string;
   avatarUrl?: string;
 }

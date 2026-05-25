@@ -14,7 +14,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const { email, password, name, phone, city } = parsed.data;
+  const { email, password, name, phone, whatsapp, city } = parsed.data;
 
   const existing = await db
     .select()
@@ -30,7 +30,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   const [user] = await db
     .insert(usersTable)
-    .values({ email, passwordHash, name, phone, city })
+    .values({ email, passwordHash, name, phone, whatsapp, city })
     .returning();
 
   req.session.userId = user.id;

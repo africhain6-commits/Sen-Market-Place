@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, User as UserIcon, ShieldCheck, Mail, AlertCircle, Home as HomeIcon } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -244,11 +244,35 @@ export default function AnnonceDetail() {
                     </p>
                   </div>
                 </div>
-                <Link href={`/profil/${listing.user.id}`}>
-                  <Button variant="outline" className="w-full">
-                    Voir le profil
-                  </Button>
-                </Link>
+                <div className="space-y-2">
+                  {listing.user.whatsapp && !isOwner && (
+                    <a
+                      href={`https://wa.me/${listing.user.whatsapp.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full"
+                      data-testid="button-whatsapp"
+                    >
+                      <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        Contacter sur WhatsApp
+                      </Button>
+                    </a>
+                  )}
+                  {listing.user.phone && !isOwner && (
+                    <a href={`tel:${listing.user.phone}`} className="w-full" data-testid="link-phone">
+                      <Button variant="outline" className="w-full gap-2">
+                        <Mail className="w-4 h-4" />
+                        {listing.user.phone}
+                      </Button>
+                    </a>
+                  )}
+                  <Link href={`/profil/${listing.user.id}`}>
+                    <Button variant="outline" className="w-full">
+                      Voir le profil
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )}

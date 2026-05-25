@@ -13,8 +13,11 @@ export interface User {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
   city?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  isAdmin: boolean;
   createdAt: string;
 }
