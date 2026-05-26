@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MapPin, Clock, Home as HomeIcon } from "lucide-react";
+import { Search, MapPin, Clock, Home as HomeIcon, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -202,6 +202,12 @@ export default function Annonces() {
                       <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium border">
                         {listing.category}
                       </div>
+                      {(listing as any).isBoosted && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#D4AF37] text-[#0A2463] px-2 py-1 rounded text-xs font-bold shadow">
+                          <Zap className="w-3 h-3" />
+                          VEDETTE
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-4 flex-1 flex flex-col">
                       <div className="font-bold text-lg text-primary mb-2">

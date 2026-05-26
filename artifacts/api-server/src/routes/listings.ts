@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, ilike, or, desc, sql } from "drizzle-orm";
+import { eq, and, gte, lte, ilike, or, desc, sql, SQL } from "drizzle-orm";
 import { db, listingsTable, usersTable } from "@workspace/db";
 import {
   GetListingsQueryParams,
@@ -62,7 +62,7 @@ router.get("/listings/featured", async (_req, res): Promise<void> => {
     .from(listingsTable)
     .innerJoin(usersTable, eq(listingsTable.userId, usersTable.id))
     .where(eq(listingsTable.status, "active"))
-    .orderBy(desc(listingsTable.createdAt))
+    .orderBy(desc(listingsTable.isBoosted), desc(listingsTable.createdAt))
     .limit(12);
 
   res.json(rows.map((r) => formatListing(r.listing, r.user)));
@@ -107,7 +107,7 @@ router.get("/listings", optionalAuth, async (req, res): Promise<void> => {
     .from(listingsTable)
     .innerJoin(usersTable, eq(listingsTable.userId, usersTable.id))
     .where(where)
-    .orderBy(desc(listingsTable.createdAt))
+    .orderBy(desc(listingsTable.isBoosted), desc(listingsTable.createdAt))
     .limit(limit)
     .offset(offset);
 

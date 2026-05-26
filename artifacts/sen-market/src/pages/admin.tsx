@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -43,6 +43,40 @@ export default function Admin() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [boostingId, setBoostingId] = useState<number | null>(null);
+
+  const handleBoost = async (id: number, days = 30) => {
+    setBoostingId(id);
+    try {
+      await fetch(`/api/admin/listings/${id}/boost`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days }),
+        credentials: "include",
+      });
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey({ status: statusFilter }) });
+      toast({ title: "Annonce boostée !", description: `Mise en VEDETTE pour ${days} jours.` });
+    } finally {
+      setBoostingId(null);
+    }
+  };
+
+  const handleUnboost = async (id: number) => {
+    setBoostingId(id);
+    try {
+      await fetch(`/api/admin/listings/${id}/unboost`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey({ status: statusFilter }) });
+      toast({ title: "Boost retiré", description: "L'annonce n'est plus en vedette." });
+    } finally {
+      setBoostingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthLoading && (!isAuthenticated || !user?.isAdmin)) {
@@ -210,6 +244,30 @@ export default function Admin() {
                           >
                             <XCircle className="w-3 h-3" />
                             Refuser
+                          </Button>
+                        )}
+                        {listing.status === "active" && !(listing as any).isBoosted && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-1"
+                            disabled={boostingId === listing.id}
+                            onClick={() => handleBoost(listing.id, 30)}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Booster
+                          </Button>
+                        )}
+                        {(listing as any).isBoosted && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-muted-foreground text-muted-foreground gap-1"
+                            disabled={boostingId === listing.id}
+                            onClick={() => handleUnboost(listing.id)}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Retirer VEDETTE
                           </Button>
                         )}
                       </div>

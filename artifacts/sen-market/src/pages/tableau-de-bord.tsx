@@ -9,11 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Package, Clock, ExternalLink } from "lucide-react";
+import { MessageSquare, Package, Clock, ExternalLink, Zap } from "lucide-react";
+import { useState } from "react";
+import { BoostModal } from "@/components/boost-modal";
 
 export default function TableauDeBord() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [boostListing, setBoostListing] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -38,6 +41,15 @@ export default function TableauDeBord() {
   if (isAuthLoading || !isAuthenticated) return null;
 
   return (
+    <>
+    {boostListing && (
+      <BoostModal
+        open={!!boostListing}
+        onClose={() => setBoostListing(null)}
+        listingId={boostListing.id}
+        listingTitle={boostListing.title}
+      />
+    )}
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Tableau de bord</h1>
 
@@ -94,13 +106,34 @@ export default function TableauDeBord() {
                           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDistanceToNow(new Date(listing.createdAt), { locale: fr, addSuffix: true })}</span>
                         </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <div className="font-semibold mb-1">
+                      <div className="shrink-0 text-right flex flex-col items-end gap-2">
+                        <div className="font-semibold">
                           {listing.price ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(listing.price) : "Sur demande"}
                         </div>
-                        <Badge variant={listing.status === 'active' ? "default" : "secondary"}>
-                          {listing.status === 'active' ? "En ligne" : "Inactif"}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {(listing as any).isBoosted && (
+                            <Badge className="bg-[#D4AF37] text-[#0A2463] border-0 gap-1">
+                              <Zap className="w-3 h-3" /> VEDETTE
+                            </Badge>
+                          )}
+                          <Badge variant={listing.status === 'active' ? "default" : "secondary"}>
+                            {listing.status === 'active' ? "En ligne" : "Inactif"}
+                          </Badge>
+                        </div>
+                        {!(listing as any).isBoosted && listing.status === 'active' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-1 text-xs h-7"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setBoostListing({ id: listing.id, title: listing.title });
+                            }}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Booster
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -172,5 +205,6 @@ export default function TableauDeBord() {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 }

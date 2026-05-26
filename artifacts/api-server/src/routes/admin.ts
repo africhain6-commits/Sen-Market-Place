@@ -108,6 +108,56 @@ router.patch("/admin/listings/:id/reject", requireAuth, async (req, res): Promis
   res.json(formatListing(updated, user));
 });
 
+router.patch("/admin/listings/:id/boost", requireAuth, async (req, res): Promise<void> => {
+  if (!(await checkAdmin(req.userId!))) {
+    res.status(403).json({ error: "Accès interdit" });
+    return;
+  }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  const days = typeof req.body.days === "number" ? req.body.days : 30;
+
+  const boostedUntil = new Date();
+  boostedUntil.setDate(boostedUntil.getDate() + days);
+
+  const [updated] = await db
+    .update(listingsTable)
+    .set({ isBoosted: true, boostedUntil, updatedAt: new Date() })
+    .where(eq(listingsTable.id, id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Annonce introuvable" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  res.json(formatListing(updated, user));
+});
+
+router.patch("/admin/listings/:id/unboost", requireAuth, async (req, res): Promise<void> => {
+  if (!(await checkAdmin(req.userId!))) {
+    res.status(403).json({ error: "Accès interdit" });
+    return;
+  }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+
+  const [updated] = await db
+    .update(listingsTable)
+    .set({ isBoosted: false, boostedUntil: null, updatedAt: new Date() })
+    .where(eq(listingsTable.id, id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Annonce introuvable" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  res.json(formatListing(updated, user));
+});
+
 router.get("/admin/users", requireAuth, async (req, res): Promise<void> => {
   if (!(await checkAdmin(req.userId!))) {
     res.status(403).json({ error: "Accès interdit" });

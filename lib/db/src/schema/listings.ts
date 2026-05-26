@@ -6,6 +6,7 @@ import {
   integer,
   numeric,
   json,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -20,6 +21,8 @@ export const listingsTable = pgTable("listings", {
   city: text("city").notNull(),
   photos: json("photos").$type<string[]>().default([]).notNull(),
   status: text("status").notNull().default("active"),
+  isBoosted: boolean("is_boosted").notNull().default(false),
+  boostedUntil: timestamp("boosted_until"),
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
