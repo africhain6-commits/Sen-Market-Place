@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "cQEqAIs_EODDqPUG96XRV"
+uri = "file://screenshots/home.jpg"
+type = "image"
+title = "Page d'accueil — Logo drapeau + nouvelles catégories"
+
+[[outputs]]
+id = "hMgnK2hXck71PAG5BHeQ4"
+uri = "file://screenshots/boutiques.jpg"
+type = "image"
+title = "Page Boutiques & Couturiers"
+
+[[outputs]]
+id = "bQ08S0e2UdDAiwSjsj8os"
+uri = "file://screenshots/publicite.jpg"
+type = "image"
+title = "Page Publicité"
