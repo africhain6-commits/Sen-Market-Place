@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isFetching: boolean;
   isAuthenticated: boolean;
   logout: () => void;
 }
@@ -14,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data: user, isLoading } = useGetMe({
+  const { data: user, isLoading, isFetching } = useGetMe({
     query: {
       retry: false,
       queryKey: getGetMeQueryKey(),
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user: user || null,
         isLoading,
+        isFetching,
         isAuthenticated: !!user,
         logout: () => logoutMutation.mutate(),
       }}

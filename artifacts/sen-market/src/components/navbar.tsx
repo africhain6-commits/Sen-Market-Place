@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Menu, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,24 +11,55 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+
+function SenegalFlag({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex rounded overflow-hidden shadow-sm border border-white/20 ${className}`}>
+      <div className="w-1/3 bg-[#00853F]" />
+      <div className="w-1/3 bg-[#FDEF42] flex items-center justify-center">
+        <svg viewBox="0 0 20 20" className="w-2.5 h-2.5">
+          <polygon
+            points="10,2 12.4,7.5 18.5,7.5 13.8,11.5 15.6,17.5 10,13.8 4.4,17.5 6.2,11.5 1.5,7.5 7.6,7.5"
+            fill="#00853F"
+          />
+        </svg>
+      </div>
+      <div className="w-1/3 bg-[#E31B23]" />
+    </div>
+  );
+}
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-primary">
+    <header className="sticky top-0 z-50 w-full border-b bg-primary shadow-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2" data-testid="link-home">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5" data-testid="link-home">
+          <SenegalFlag className="h-7 w-11" />
           <span className="text-xl font-bold text-white tracking-tight">
-            Sen<span className="text-accent">Market</span>
+            Sen<span className="text-[#D4AF37]">Market</span>
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4">
-          <Link href="/annonces" className="text-sm font-medium text-white/90 hover:text-white hidden sm:block" data-testid="link-annonces">
-            Toutes les annonces
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-5">
+          <Link href="/annonces" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-annonces">
+            Annonces
           </Link>
-          
+          <Link href="/boutiques" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-boutiques">
+            Boutiques &amp; Couturiers
+          </Link>
+          <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-pub">
+            Publicité
+          </Link>
+        </nav>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
           <Link href="/publier" data-testid="link-publish">
             <Button size="sm" className="hidden sm:flex gap-2 font-semibold bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
               <PlusCircle className="h-4 w-4" />
@@ -55,9 +86,7 @@ export function Navbar() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -91,16 +120,44 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link href="/connexion" data-testid="link-login">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white hidden sm:flex">
-                  Connexion
-                </Button>
-              </Link>
-            </div>
+            <Link href="/connexion" data-testid="link-login">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white hidden sm:flex">
+                Connexion
+              </Button>
+            </Link>
           )}
-        </nav>
+
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-white hover:bg-white/10"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-primary border-t border-white/10 px-4 py-3 flex flex-col gap-2">
+          <Link href="/annonces" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
+            Toutes les annonces
+          </Link>
+          <Link href="/boutiques" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
+            Boutiques &amp; Couturiers
+          </Link>
+          <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
+            Publicité
+          </Link>
+          {!isAuthenticated && (
+            <Link href="/connexion" className="text-sm font-medium text-white/85 hover:text-white py-2" onClick={() => setMobileOpen(false)}>
+              Connexion
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 }

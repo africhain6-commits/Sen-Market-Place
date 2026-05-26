@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useGetListing, useSendMessage, getGetListingQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { Link } from "wouter";
 
 export default function AnnonceDetail() {
   const [, params] = useRoute("/annonces/:id");
+  const [, setLocation] = useLocation();
   const listingId = params?.id ? parseInt(params.id) : 0;
   
   const { user, isAuthenticated } = useAuth();
@@ -100,12 +101,24 @@ export default function AnnonceDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <Link href="/" className="hover:text-foreground transition-colors">Accueil</Link>
-        <span>/</span>
-        <Link href="/annonces" className="hover:text-foreground transition-colors">Annonces</Link>
-        <span>/</span>
-        <Link href={`/annonces?category=${listing.category}`} className="hover:text-foreground transition-colors">{listing.category}</Link>
+      {/* Back button + breadcrumb */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 shrink-0"
+          onClick={() => setLocation("/annonces")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Retour
+        </Button>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden">
+          <Link href="/" className="hover:text-foreground transition-colors shrink-0">Accueil</Link>
+          <span>/</span>
+          <Link href="/annonces" className="hover:text-foreground transition-colors shrink-0">Annonces</Link>
+          <span>/</span>
+          <Link href={`/annonces?category=${listing.category}`} className="hover:text-foreground transition-colors truncate">{listing.category}</Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

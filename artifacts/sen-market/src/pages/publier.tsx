@@ -31,19 +31,19 @@ type PublishFormValues = z.infer<typeof publishSchema>;
 
 export default function Publier() {
   const [, setLocation] = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isFetching } = useAuth();
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isFetching && !isAuthenticated) {
       toast({
         title: "Connexion requise",
         description: "Vous devez être connecté pour publier une annonce.",
       });
       setLocation("/connexion");
     }
-  }, [isLoading, isAuthenticated, setLocation]);
+  }, [isLoading, isFetching, isAuthenticated, setLocation]);
 
   const form = useForm<PublishFormValues>({
     resolver: zodResolver(publishSchema),
@@ -88,7 +88,7 @@ export default function Publier() {
     });
   };
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading || isFetching || !isAuthenticated) return null;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">

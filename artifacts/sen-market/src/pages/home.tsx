@@ -14,19 +14,24 @@ import {
   Search,
   MapPin,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Scissors,
+  ShoppingBag,
+  TrendingUp
 } from "lucide-react";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const categories = [
-  { id: "Immobilier", icon: HomeIcon, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
-  { id: "Véhicules", icon: Car, color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
-  { id: "Emplois", icon: Briefcase, color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" },
-  { id: "Services", icon: Wrench, color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" },
-  { id: "Électronique", icon: Smartphone, color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
-  { id: "Maison & Jardin", icon: Trees, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  { id: "Immobilier", icon: HomeIcon, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400", href: "/annonces?category=Immobilier" },
+  { id: "Véhicules", icon: Car, color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400", href: "/annonces?category=Véhicules" },
+  { id: "Emplois", icon: Briefcase, color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400", href: "/annonces?category=Emplois" },
+  { id: "Services", icon: Wrench, color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400", href: "/annonces?category=Services" },
+  { id: "Électronique", icon: Smartphone, color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400", href: "/annonces?category=Électronique" },
+  { id: "Maison & Jardin", icon: Trees, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400", href: "/annonces?category=Maison%20%26%20Jardin" },
+  { id: "Boutiques & Couturiers", icon: Scissors, color: "bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400", href: "/boutiques" },
+  { id: "Publicité", icon: TrendingUp, color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400", href: "/publicite" },
 ];
 
 export default function Home() {
@@ -85,22 +90,22 @@ export default function Home() {
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8 text-center">Catégories Principales</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             {categories.map((cat) => {
               const Icon = cat.icon;
               const stat = stats?.find(s => s.category === cat.id);
               
               return (
-                <Link key={cat.id} href={`/annonces?category=${encodeURIComponent(cat.id)}`} data-testid={`link-category-${cat.id}`}>
+                <Link key={cat.id} href={cat.href} data-testid={`link-category-${cat.id}`}>
                   <Card className="hover:border-primary/50 transition-colors cursor-pointer group h-full">
-                    <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-                      <div className={`p-4 rounded-full ${cat.color} group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-8 h-8" />
+                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                      <div className={`p-3 rounded-full ${cat.color} group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-7 h-7" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm md:text-base">{cat.id}</h3>
+                        <h3 className="font-semibold text-sm md:text-base leading-tight">{cat.id}</h3>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {stat ? `${stat.count} annonces` : '0 annonces'}
+                          {stat ? `${stat.count} annonces` : ''}
                         </p>
                       </div>
                     </CardContent>

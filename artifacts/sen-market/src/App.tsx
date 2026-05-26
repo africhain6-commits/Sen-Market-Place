@@ -15,6 +15,8 @@ import Inscription from "@/pages/inscription";
 import TableauDeBord from "@/pages/tableau-de-bord";
 import Profil from "@/pages/profil";
 import Admin from "@/pages/admin";
+import Boutiques from "@/pages/boutiques";
+import Pub from "@/pages/pub";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,8 @@ function Router() {
         <Route path="/tableau-de-bord" component={TableauDeBord} />
         <Route path="/profil/:id" component={Profil} />
         <Route path="/admin" component={Admin} />
+        <Route path="/boutiques" component={Boutiques} />
+        <Route path="/publicite" component={Pub} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
