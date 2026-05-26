@@ -18,3 +18,15 @@ id = "bQ08S0e2UdDAiwSjsj8os"
 uri = "file://screenshots/publicite.jpg"
 type = "image"
 title = "Page Publicité"
+
+[[outputs]]
+id = "auNsK_VlI06Gg5nFIEH64"
+uri = "file://senmarket-business-plan.pdf"
+type = "pdf"
+title = "SenMarket — Business Plan"
+
+[[outputs]]
+id = "dKPWwvhZ9CpTinpI2BA-j"
+uri = "file://senmarket-previsionnel-revenus.pdf"
+type = "pdf"
+title = "SenMarket — Prévisionnel de Revenus"
