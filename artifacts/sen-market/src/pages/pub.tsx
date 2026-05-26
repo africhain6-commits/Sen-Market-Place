@@ -199,16 +199,16 @@ export default function Pub() {
             Contactez notre équipe commerciale pour un devis personnalisé ou pour toute question sur nos offres.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:pub@senmarket.sn">
+            <a href="mailto:africhain6@gmail.com">
               <Button size="lg" className="h-14 px-8 bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold">
                 <Mail className="w-5 h-5 mr-2" />
-                pub@senmarket.sn
+                africhain6@gmail.com
               </Button>
             </a>
-            <a href="tel:+221338000000">
+            <a href="tel:+221773579701">
               <Button size="lg" variant="outline" className="h-14 px-8 text-white border-white/50 hover:bg-white/10 hover:text-white">
                 <Phone className="w-5 h-5 mr-2" />
-                +221 33 800 00 00
+                +221 77 357 97 01
               </Button>
             </a>
           </div>

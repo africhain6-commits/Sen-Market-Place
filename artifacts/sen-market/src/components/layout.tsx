@@ -31,7 +31,10 @@ export function Layout({ children }: { children: ReactNode }) {
               <ul className="space-y-2 text-muted-foreground">
                 <li><Link href="/connexion" className="hover:text-primary transition-colors">Se connecter</Link></li>
                 <li><Link href="/inscription" className="hover:text-primary transition-colors">S'inscrire</Link></li>
-                <li><a href="mailto:contact@senmarket.sn" className="hover:text-primary transition-colors">contact@senmarket.sn</a></li>
+                <li><a href="mailto:africhain6@gmail.com" className="hover:text-primary transition-colors">africhain6@gmail.com</a></li>
+                <li><a href="tel:+221773579701" className="hover:text-primary transition-colors">+221 77 357 97 01</a></li>
+                <li><a href="https://wa.me/221773579701" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp : +221 77 357 97 01</a></li>
+                <li className="text-muted-foreground">Ngor Almadies, Dakar, Sénégal</li>
               </ul>
             </div>
           </div>
