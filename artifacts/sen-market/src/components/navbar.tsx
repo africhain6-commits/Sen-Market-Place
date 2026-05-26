@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield, Menu, X } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +69,16 @@ export function Navbar() {
               <PlusCircle className="h-4 w-4" />
             </Button>
           </Link>
+
+          {/* Bouton Admin visible pour les admins */}
+          {isAuthenticated && user?.isAdmin && (
+            <Link href="/admin">
+              <Button size="sm" variant="outline" className="hidden sm:flex gap-2 border-red-400 text-red-400 hover:bg-red-400/10 hover:text-red-300 font-semibold">
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
 
           {isAuthenticated && user ? (
             <DropdownMenu>
@@ -151,6 +161,12 @@ export function Navbar() {
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Publicité
           </Link>
+          {isAuthenticated && user?.isAdmin && (
+            <Link href="/admin" className="text-sm font-bold text-red-400 hover:text-red-300 py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+              <Shield className="w-4 h-4" />
+              Administration
+            </Link>
+          )}
           {!isAuthenticated && (
             <Link href="/connexion" className="text-sm font-medium text-white/85 hover:text-white py-2" onClick={() => setMobileOpen(false)}>
               Connexion
