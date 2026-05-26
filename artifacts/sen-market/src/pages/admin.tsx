@@ -46,6 +46,21 @@ export default function Admin() {
   const [boostingId, setBoostingId] = useState<number | null>(null);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [promotingId, setPromotingId] = useState<number | null>(null);
+
+  const handleMakeAdmin = async (id: number, name: string) => {
+    setPromotingId(id);
+    try {
+      const res = await fetch(`/api/admin/users/${id}/make-admin`, { method: "PATCH", credentials: "include" });
+      if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: getAdminGetUsersQueryKey() });
+      toast({ title: `${name} est maintenant administrateur !` });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de promouvoir.", variant: "destructive" });
+    } finally {
+      setPromotingId(null);
+    }
+  };
   const handleAdminDelete = async (id: number) => {
     setDeletingId(id);
     try {
@@ -350,6 +365,17 @@ export default function Admin() {
                         <p className="text-xs text-muted-foreground">{u.email} · {u.city ?? "Ville non renseignée"}</p>
                       </div>
                       {!u.isAdmin && u.id !== user?.id && (
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                            disabled={promotingId === u.id}
+                            onClick={() => handleMakeAdmin(u.id, u.name)}
+                          >
+                            <Shield className="w-3 h-3" />
+                            Rendre admin
+                          </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -380,6 +406,7 @@ export default function Admin() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       )}
                     </div>
                   ))}

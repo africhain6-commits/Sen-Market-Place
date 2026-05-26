@@ -187,6 +187,24 @@ router.patch("/admin/users/:id/ban", requireAuth, async (req, res): Promise<void
   res.json({ message: `Les annonces de ${user.name} ont été supprimées.` });
 });
 
+router.patch("/admin/users/:id/make-admin", requireAuth, async (req, res): Promise<void> => {
+  if (!(await checkAdmin(req.userId!))) {
+    res.status(403).json({ error: "Accès interdit" });
+    return;
+  }
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  const [updated] = await db
+    .update(usersTable)
+    .set({ isAdmin: true })
+    .where(eq(usersTable.id, id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Utilisateur introuvable" });
+    return;
+  }
+  res.json({ message: `${updated.name} est maintenant administrateur.` });
+});
+
 router.delete("/admin/listings/:id", requireAuth, async (req, res): Promise<void> => {
   if (!(await checkAdmin(req.userId!))) {
     res.status(403).json({ error: "Accès interdit" });
