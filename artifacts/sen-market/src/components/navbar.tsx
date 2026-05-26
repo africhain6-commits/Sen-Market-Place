@@ -47,6 +47,9 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-5">
+          <Link href="/" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-accueil">
+            Accueil
+          </Link>
           <Link href="/annonces" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-annonces">
             Annonces
           </Link>
@@ -152,6 +155,9 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-primary border-t border-white/10 px-4 py-3 flex flex-col gap-2">
+          <Link href="/" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
+            Accueil
+          </Link>
           <Link href="/annonces" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Toutes les annonces
           </Link>

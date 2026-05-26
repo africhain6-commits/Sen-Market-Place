@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useGetListing, useSendMessage, getGetListingQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -22,6 +22,8 @@ export default function AnnonceDetail() {
   const { user, isAuthenticated } = useAuth();
   const [message, setMessage] = useState("");
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [currentPhoto, setCurrentPhoto] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const { data: listing, isLoading, error } = useGetListing(listingId, {
     query: {
@@ -98,6 +100,10 @@ export default function AnnonceDetail() {
   }
 
   const isOwner = user?.id === listing.userId;
+  const photos: string[] = listing.photos ?? [];
+
+  const prevPhoto = () => setCurrentPhoto((i) => (i === 0 ? Math.max(photos.length - 1, 0) : i - 1));
+  const nextPhoto = () => setCurrentPhoto((i) => (i === photos.length - 1 ? 0 : i + 1));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -125,14 +131,58 @@ export default function AnnonceDetail() {
         {/* Left Column - Photos and Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-card border rounded-lg overflow-hidden">
-            {listing.photos && listing.photos.length > 0 ? (
-              <div className="aspect-[4/3] sm:aspect-video relative bg-muted flex items-center justify-center">
-                <img 
-                  src={listing.photos[0]} 
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            {photos.length > 0 ? (
+              <>
+                {/* Main photo with arrows */}
+                <div className="aspect-[4/3] sm:aspect-video relative bg-muted group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
+                  <img
+                    src={photos[currentPhoto]}
+                    alt={`${listing.title} — photo ${currentPhoto + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Zoom hint */}
+                  <div className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <ZoomIn className="w-4 h-4" />
+                  </div>
+                  {photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all opacity-0 group-hover:opacity-100 active:opacity-100"
+                        aria-label="Photo précédente"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all opacity-0 group-hover:opacity-100 active:opacity-100"
+                        aria-label="Photo suivante"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                      {/* Counter */}
+                      <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                        {currentPhoto + 1} / {photos.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+                {/* Thumbnails */}
+                {photos.length > 1 && (
+                  <div className="flex p-3 gap-2 overflow-x-auto border-t bg-muted/20">
+                    {photos.map((photo, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPhoto(i)}
+                        className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${i === currentPhoto ? "border-primary shadow-md scale-105" : "border-transparent hover:border-primary/50 opacity-70 hover:opacity-100"}`}
+                        aria-label={`Voir photo ${i + 1}`}
+                      >
+                        <img src={photo} alt={`Miniature ${i + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="aspect-[4/3] sm:aspect-video relative bg-muted flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
@@ -141,18 +191,64 @@ export default function AnnonceDetail() {
                 </div>
               </div>
             )}
-            
-            {/* Thumbnails if multiple photos */}
-            {listing.photos && listing.photos.length > 1 && (
-              <div className="flex p-4 gap-4 overflow-x-auto border-t">
-                {listing.photos.map((photo, i) => (
-                  <button key={i} className="shrink-0 w-24 h-24 rounded border-2 border-transparent hover:border-primary overflow-hidden transition-colors">
-                    <img src={photo} alt={`Photo ${i+1}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
+
+          {/* Lightbox */}
+          {lightboxOpen && photos.length > 0 && (
+            <div
+              className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <button
+                className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 z-10"
+                onClick={() => setLightboxOpen(false)}
+                aria-label="Fermer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+                {currentPhoto + 1} / {photos.length}
+              </div>
+              {photos.length > 1 && (
+                <>
+                  <button
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/25 rounded-full p-3 z-10"
+                    onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+                    aria-label="Photo précédente"
+                  >
+                    <ChevronLeft className="w-7 h-7" />
+                  </button>
+                  <button
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/25 rounded-full p-3 z-10"
+                    onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+                    aria-label="Photo suivante"
+                  >
+                    <ChevronRight className="w-7 h-7" />
+                  </button>
+                </>
+              )}
+              <img
+                src={photos[currentPhoto]}
+                alt={`${listing.title} — photo ${currentPhoto + 1}`}
+                className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {/* Thumbnail strip */}
+              {photos.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[80vw] p-1">
+                  {photos.map((photo, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setCurrentPhoto(i); }}
+                      className={`shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${i === currentPhoto ? "border-white" : "border-white/30 opacity-60 hover:opacity-100"}`}
+                    >
+                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="bg-card border rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Description</h2>
