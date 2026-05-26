@@ -1,6 +1,19 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMyListings, useGetConversations, getGetMyListingsQueryKey, getGetConversationsQueryKey } from "@workspace/api-client-react";
+import { useGetMyListings, useGetConversations, useDeleteListing, getGetMyListingsQueryKey, getGetConversationsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +30,17 @@ export default function TableauDeBord() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [boostListing, setBoostListing] = useState<{ id: number; title: string } | null>(null);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useDeleteListing({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetMyListingsQueryKey() });
+        toast({ title: "Annonce supprimée" });
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible de supprimer.", variant: "destructive" }),
+    },
+  });
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -134,6 +158,35 @@ export default function TableauDeBord() {
                             Booster
                           </Button>
                         )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-destructive text-destructive hover:bg-destructive/10 gap-1 text-xs h-7"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              Supprimer
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer cette annonce ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. L'annonce « {listing.title} » sera définitivement supprimée.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive hover:bg-destructive/90"
+                                onClick={() => deleteMutation.mutate({ id: listing.id })}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))}

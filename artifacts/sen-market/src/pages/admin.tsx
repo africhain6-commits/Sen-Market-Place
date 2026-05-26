@@ -45,6 +45,22 @@ export default function Admin() {
   const [statusFilter, setStatusFilter] = useState("pending");
   const [boostingId, setBoostingId] = useState<number | null>(null);
 
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const handleAdminDelete = async (id: number) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/listings/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminGetListingsQueryKey({ status: statusFilter }) });
+      toast({ title: "Annonce supprimée définitivement." });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer.", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleBoost = async (id: number, days = 30) => {
     setBoostingId(id);
     try {
@@ -270,6 +286,31 @@ export default function Admin() {
                             Retirer VEDETTE
                           </Button>
                         )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="destructive" className="gap-1" disabled={deletingId === listing.id}>
+                              <XCircle className="w-3 h-3" />
+                              Supprimer
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer définitivement ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                L'annonce « {listing.title} » sera supprimée de façon irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive hover:bg-destructive/90"
+                                onClick={() => handleAdminDelete(listing.id)}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))}
