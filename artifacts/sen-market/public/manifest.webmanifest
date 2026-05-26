@@ -1,0 +1,44 @@
+{
+  "name": "SenMarket — Annonces Sénégal",
+  "short_name": "SenMarket",
+  "description": "La place de marché en ligne la plus simple et sécurisée pour acheter et vendre au Sénégal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A2463",
+  "theme_color": "#0A2463",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Publier une annonce",
+      "short_name": "Publier",
+      "description": "Publier une nouvelle annonce",
+      "url": "/publier",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Toutes les annonces",
+      "short_name": "Annonces",
+      "description": "Parcourir toutes les annonces",
+      "url": "/annonces",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}
