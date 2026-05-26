@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap } from "lucide-react";
+import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap, Shield } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
