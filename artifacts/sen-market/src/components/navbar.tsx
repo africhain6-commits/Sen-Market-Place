@@ -167,11 +167,30 @@ export function Navbar() {
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Publicité
           </Link>
+          {isAuthenticated && user && (
+            <>
+              <Link href="/tableau-de-bord" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+                <LayoutDashboard className="w-4 h-4" />
+                Tableau de bord
+              </Link>
+              <Link href={`/profil/${user.id}`} className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+                Mon profil
+              </Link>
+            </>
+          )}
           {isAuthenticated && user?.isAdmin && (
             <Link href="/admin" className="text-sm font-bold text-red-400 hover:text-red-300 py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
               <Shield className="w-4 h-4" />
               Administration
             </Link>
+          )}
+          {isAuthenticated && user && (
+            <button
+              onClick={() => { logout(); setMobileOpen(false); }}
+              className="text-sm font-medium text-white/60 hover:text-white py-2 text-left border-b border-white/10"
+            >
+              Déconnexion
+            </button>
           )}
           {!isAuthenticated && (
             <Link href="/connexion" className="text-sm font-medium text-white/85 hover:text-white py-2" onClick={() => setMobileOpen(false)}>

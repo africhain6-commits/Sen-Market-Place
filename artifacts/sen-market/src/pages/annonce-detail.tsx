@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -107,7 +107,7 @@ export default function AnnonceDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back button + breadcrumb */}
+      {/* Back button + breadcrumb + share */}
       <div className="flex items-center gap-3 mb-6">
         <Button
           variant="outline"
@@ -118,13 +118,31 @@ export default function AnnonceDetail() {
           <ArrowLeft className="w-4 h-4" />
           Retour
         </Button>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden flex-1 min-w-0">
           <Link href="/" className="hover:text-foreground transition-colors shrink-0">Accueil</Link>
           <span>/</span>
           <Link href="/annonces" className="hover:text-foreground transition-colors shrink-0">Annonces</Link>
           <span>/</span>
           <Link href={`/annonces?category=${listing.category}`} className="hover:text-foreground transition-colors truncate">{listing.category}</Link>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 shrink-0"
+          onClick={async () => {
+            const url = window.location.href;
+            const text = `${listing.title} — ${listing.price ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(listing.price) : "Prix sur demande"} — SenMarket`;
+            if (navigator.share) {
+              await navigator.share({ title: listing.title, text, url }).catch(() => {});
+            } else {
+              await navigator.clipboard.writeText(url).catch(() => {});
+              toast({ title: "Lien copié !", description: "Collez-le dans WhatsApp, SMS ou email." });
+            }
+          }}
+        >
+          <Share2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Partager</span>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
