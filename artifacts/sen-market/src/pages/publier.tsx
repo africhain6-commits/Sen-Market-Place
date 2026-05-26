@@ -202,8 +202,8 @@ export default function Publier() {
                 />
 
                 <div className="md:col-span-2">
-                  <FormLabel>Photos (jusqu'à 10)</FormLabel>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <label className="text-sm font-medium leading-none">Photos (jusqu'à 10)</label>
+                  <p className="text-sm text-muted-foreground mt-1 mb-3">
                     La première photo sera utilisée comme photo principale. Formats acceptés : JPG, PNG, WebP.
                   </p>
                   <PhotoUploader
