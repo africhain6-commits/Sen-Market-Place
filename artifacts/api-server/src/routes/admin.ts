@@ -205,6 +205,28 @@ router.patch("/admin/users/:id/make-admin", requireAuth, async (req, res): Promi
   res.json({ message: `${updated.name} est maintenant administrateur.` });
 });
 
+router.patch("/admin/users/:id/revoke-admin", requireAuth, async (req, res): Promise<void> => {
+  if (!(await checkAdmin(req.userId!))) {
+    res.status(403).json({ error: "Accès interdit" });
+    return;
+  }
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (id === req.userId) {
+    res.status(400).json({ error: "Vous ne pouvez pas retirer vos propres droits admin." });
+    return;
+  }
+  const [updated] = await db
+    .update(usersTable)
+    .set({ isAdmin: false })
+    .where(eq(usersTable.id, id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Utilisateur introuvable" });
+    return;
+  }
+  res.json({ message: `Les droits admin de ${updated.name} ont été retirés.` });
+});
+
 router.delete("/admin/listings/:id", requireAuth, async (req, res): Promise<void> => {
   if (!(await checkAdmin(req.userId!))) {
     res.status(403).json({ error: "Accès interdit" });

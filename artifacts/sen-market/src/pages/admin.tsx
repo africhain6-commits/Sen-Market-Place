@@ -48,6 +48,8 @@ export default function Admin() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [promotingId, setPromotingId] = useState<number | null>(null);
 
+  const [revokingId, setRevokingId] = useState<number | null>(null);
+
   const handleMakeAdmin = async (id: number, name: string) => {
     setPromotingId(id);
     try {
@@ -59,6 +61,20 @@ export default function Admin() {
       toast({ title: "Erreur", description: "Impossible de promouvoir.", variant: "destructive" });
     } finally {
       setPromotingId(null);
+    }
+  };
+
+  const handleRevokeAdmin = async (id: number, name: string) => {
+    setRevokingId(id);
+    try {
+      const res = await fetch(`/api/admin/users/${id}/revoke-admin`, { method: "PATCH", credentials: "include" });
+      if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: getAdminGetUsersQueryKey() });
+      toast({ title: `Droits admin retirés`, description: `${name} n'est plus administrateur.` });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de retirer les droits.", variant: "destructive" });
+    } finally {
+      setRevokingId(null);
     }
   };
   const handleAdminDelete = async (id: number) => {
@@ -364,8 +380,20 @@ export default function Admin() {
                         </div>
                         <p className="text-xs text-muted-foreground">{u.email} · {u.city ?? "Ville non renseignée"}</p>
                       </div>
-                      {!u.isAdmin && u.id !== user?.id && (
-                        <div className="flex gap-2 shrink-0">
+                      {u.id !== user?.id && (
+                        <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                          {u.isAdmin ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1 border-destructive text-destructive hover:bg-destructive/10"
+                              disabled={revokingId === u.id}
+                              onClick={() => handleRevokeAdmin(u.id, u.name)}
+                            >
+                              <Shield className="w-3 h-3" />
+                              Retirer admin
+                            </Button>
+                          ) : (
                           <Button
                             size="sm"
                             variant="outline"
@@ -376,6 +404,7 @@ export default function Admin() {
                             <Shield className="w-3 h-3" />
                             Rendre admin
                           </Button>
+                          )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
