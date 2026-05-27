@@ -703,6 +703,216 @@ paths:
         "403":
           description: Forbidden
 
+  /listings/{id}/similar:
+    get:
+      operationId: getSimilarListings
+      tags: [listings]
+      summary: Get similar listings (same category, excluding current)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Listing"
+
+  /listings/{id}/report:
+    post:
+      operationId: reportListing
+      tags: [listings]
+      summary: Report a listing
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+
+  /listings/{id}/track:
+    post:
+      operationId: trackListingEvent
+      tags: [listings]
+      summary: Track a listing event (view or click)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackEventInput"
+      responses:
+        "204":
+          description: No Content
+
+  /listings/{id}/stats:
+    get:
+      operationId: getListingStatsById
+      tags: [listings]
+      summary: Get listing stats (owner only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingStats"
+        "403":
+          description: Forbidden
+
+  /search-alerts:
+    get:
+      operationId: getSearchAlerts
+      tags: [search-alerts]
+      summary: Get current user's search alerts
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchAlert"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createSearchAlert
+      tags: [search-alerts]
+      summary: Create a search alert
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchAlertInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchAlert"
+        "401":
+          description: Unauthorized
+
+  /search-alerts/{id}:
+    delete:
+      operationId: deleteSearchAlert
+      tags: [search-alerts]
+      summary: Delete a search alert
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Not Found
+
+  /admin/reports:
+    get:
+      operationId: getAdminReports
+      tags: [admin]
+      summary: Get all reports (admin only)
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+        "403":
+          description: Forbidden
+
+  /admin/reports/{id}/resolve:
+    patch:
+      operationId: resolveReport
+      tags: [admin]
+      summary: Resolve a report
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [resolved, dismissed]
+              required: [action]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Forbidden
+
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -1096,6 +1306,108 @@ components:
         - type
         - message
         - isRead
+        - createdAt
+
+    ReportInput:
+      type: object
+      properties:
+        reason:
+          type: string
+        details:
+          type: string
+      required:
+        - reason
+
+    TrackEventInput:
+      type: object
+      properties:
+        eventType:
+          type: string
+      required:
+        - eventType
+
+    ListingStats:
+      type: object
+      properties:
+        views:
+          type: integer
+        phoneClicks:
+          type: integer
+        whatsappClicks:
+          type: integer
+        messageCount:
+          type: integer
+      required:
+        - views
+        - phoneClicks
+        - whatsappClicks
+        - messageCount
+
+    SearchAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        query:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        minPrice:
+          type: ["number", "null"]
+        maxPrice:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - createdAt
+
+    SearchAlertInput:
+      type: object
+      properties:
+        query:
+          type: string
+        category:
+          type: string
+        city:
+          type: string
+        minPrice:
+          type: number
+        maxPrice:
+          type: number
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        listingId:
+          type: integer
+        reporterId:
+          type: integer
+        reason:
+          type: string
+        details:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+        listing:
+          $ref: "#/components/schemas/Listing"
+        reporter:
+          $ref: "#/components/schemas/User"
+      required:
+        - id
+        - listingId
+        - reporterId
+        - reason
+        - status
         - createdAt
 
     RequestUploadUrlBody:

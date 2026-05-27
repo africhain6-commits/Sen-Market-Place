@@ -8,9 +8,12 @@ import {
   useAdminGetUsers,
   useAdminBanUser,
   useGetAdminStats,
+  useGetAdminReports,
+  useResolveReport,
   getAdminGetListingsQueryKey,
   getAdminGetUsersQueryKey,
   getGetAdminStatsQueryKey,
+  getGetAdminReportsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap, Shield, BarChart3, Heart, Star, TrendingUp } from "lucide-react";
+import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap, Shield, BarChart3, Heart, Star, TrendingUp, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -146,6 +149,19 @@ export default function Admin() {
     query: { queryKey: getGetAdminStatsQueryKey() },
   });
 
+  const { data: reports, isLoading: isLoadingReports } = useGetAdminReports({
+    query: { queryKey: getGetAdminReportsQueryKey() },
+  });
+
+  const resolveReportMutation = useResolveReport({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetAdminReportsQueryKey() });
+        toast({ title: "Signalement traité." });
+      },
+    },
+  });
+
   const approveMutation = useAdminApproveListing({
     mutation: {
       onSuccess: () => {
@@ -201,7 +217,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="listings">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap h-auto">
           <TabsTrigger value="listings" data-testid="tab-admin-listings">
             <Package className="w-4 h-4 mr-2" />
             Annonces
@@ -209,6 +225,15 @@ export default function Admin() {
           <TabsTrigger value="users" data-testid="tab-admin-users">
             <User className="w-4 h-4 mr-2" />
             Utilisateurs
+          </TabsTrigger>
+          <TabsTrigger value="reports" data-testid="tab-admin-reports">
+            <Flag className="w-4 h-4 mr-2" />
+            Signalements
+            {reports && (reports as any[]).filter((r: any) => r.status === "pending").length > 0 && (
+              <span className="ml-2 bg-destructive text-destructive-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {(reports as any[]).filter((r: any) => r.status === "pending").length}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="stats" data-testid="tab-admin-stats">
             <BarChart3 className="w-4 h-4 mr-2" />
@@ -435,6 +460,76 @@ export default function Admin() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Signalements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingReports ? (
+                <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
+              ) : reports && (reports as any[]).length > 0 ? (
+                <div className="space-y-3">
+                  {(reports as any[]).map((report: any) => (
+                    <div key={report.id} className={`flex items-start gap-4 p-4 border rounded-lg ${report.status === "pending" ? "bg-destructive/5 border-destructive/20" : "opacity-60"}`}>
+                      <Flag className={`w-5 h-5 shrink-0 mt-0.5 ${report.status === "pending" ? "text-destructive" : "text-muted-foreground"}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={report.status === "pending" ? "destructive" : "secondary"} className="text-xs">
+                            {report.status === "pending" ? "En attente" : report.status === "resolved" ? "Résolu" : "Ignoré"}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(report.createdAt), { locale: fr, addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="font-semibold text-sm">{report.reason}</p>
+                        {report.details && <p className="text-xs text-muted-foreground mt-1">{report.details}</p>}
+                        {report.listing && (
+                          <Link href={`/annonces/${report.listing.id}`} className="text-xs text-primary hover:underline mt-1 block">
+                            Annonce : {report.listing.title}
+                          </Link>
+                        )}
+                        {report.reporter && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Signalé par : {report.reporter.name}</p>
+                        )}
+                      </div>
+                      {report.status === "pending" && (
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 border-destructive text-destructive hover:bg-destructive/10 text-xs"
+                            disabled={resolveReportMutation.isPending}
+                            onClick={() => resolveReportMutation.mutate({ id: report.id, data: { action: "resolved" } })}
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            Résoudre
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1 text-muted-foreground text-xs"
+                            disabled={resolveReportMutation.isPending}
+                            onClick={() => resolveReportMutation.mutate({ id: report.id, data: { action: "dismissed" } })}
+                          >
+                            <XCircle className="w-3 h-3" />
+                            Ignorer
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                  <Flag className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>Aucun signalement en cours.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="users">

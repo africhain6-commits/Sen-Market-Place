@@ -8,9 +8,14 @@ import {
   useRenewListing,
   useGetFavorites,
   useRemoveFavorite,
+  useGetSearchAlerts,
+  useCreateSearchAlert,
+  useDeleteSearchAlert,
+  useGetListingStatsById,
   getGetMyListingsQueryKey,
   getGetConversationsQueryKey,
   getGetFavoritesQueryKey,
+  getGetSearchAlertsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -33,9 +38,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil, Pause, Play, Heart, RefreshCw, MapPin } from "lucide-react";
+import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil, Pause, Play, Heart, RefreshCw, MapPin, Bell, Trash2, BarChart3, Eye, Phone, MessageCircle, Plus, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { BoostModal } from "@/components/boost-modal";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const CATEGORIES = ["Immobilier", "Véhicules", "Électronique", "Mode & Beauté", "Maison & Jardin", "Services", "Emploi", "Animaux"];
+const CITIES = ["Dakar", "Thiès", "Kaolack", "Saint-Louis", "Ziguinchor", "Rufisque", "Touba", "Mbour", "Diourbel", "Tambacounda"];
+
+function ListingStatsRow({ listingId, title }: { listingId: number; title: string }) {
+  const { data: stats } = useGetListingStatsById(listingId, { query: { queryKey: ["listing-stats", listingId] } });
+  return (
+    <div className="flex items-center gap-4 p-4 border rounded-lg">
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm line-clamp-1">{title}</p>
+      </div>
+      <div className="flex items-center gap-4 shrink-0 text-sm text-muted-foreground">
+        <span className="flex items-center gap-1"><Eye className="w-4 h-4 text-blue-500" />{stats?.views ?? "—"} vues</span>
+        <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-emerald-500" />{stats?.phoneClicks ?? "—"}</span>
+        <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4 text-green-500" />{stats?.whatsappClicks ?? "—"} WA</span>
+        <span className="flex items-center gap-1"><MessageSquare className="w-4 h-4 text-primary" />{stats?.messageCount ?? "—"} msg</span>
+      </div>
+    </div>
+  );
+}
 
 const formatPrice = (price?: number | null) => {
   if (price == null) return "Sur demande";
@@ -46,6 +73,9 @@ export default function TableauDeBord() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [boostListing, setBoostListing] = useState<{ id: number; title: string } | null>(null);
+  const [alertQuery, setAlertQuery] = useState("");
+  const [alertCategory, setAlertCategory] = useState("");
+  const [alertCity, setAlertCity] = useState("");
   const queryClient = useQueryClient();
 
   const deleteMutation = useDeleteListing({
@@ -88,6 +118,28 @@ export default function TableauDeBord() {
     },
   });
 
+  const createAlertMutation = useCreateSearchAlert({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetSearchAlertsQueryKey() });
+        toast({ title: "Alerte créée !", description: "Vous serez notifié des nouvelles annonces correspondantes." });
+        setAlertQuery("");
+        setAlertCategory("");
+        setAlertCity("");
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible de créer l'alerte.", variant: "destructive" }),
+    },
+  });
+
+  const deleteAlertMutation = useDeleteSearchAlert({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetSearchAlertsQueryKey() });
+        toast({ title: "Alerte supprimée" });
+      },
+    },
+  });
+
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       setLocation("/connexion");
@@ -115,6 +167,13 @@ export default function TableauDeBord() {
     }
   });
 
+  const { data: searchAlerts } = useGetSearchAlerts({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetSearchAlertsQueryKey(),
+    }
+  });
+
   if (isAuthLoading || !isAuthenticated) return null;
 
   return (
@@ -131,10 +190,23 @@ export default function TableauDeBord() {
       <h1 className="text-3xl font-bold mb-8">Tableau de bord</h1>
 
       <Tabs defaultValue="annonces" className="w-full">
-        <TabsList className="grid w-full max-w-lg grid-cols-3 mb-8">
+        <TabsList className="flex w-full flex-wrap gap-1 h-auto mb-8">
           <TabsTrigger value="annonces" data-testid="tab-annonces">
             <Package className="w-4 h-4 mr-2" />
             Mes annonces
+          </TabsTrigger>
+          <TabsTrigger value="stats" data-testid="tab-stats">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Statistiques
+          </TabsTrigger>
+          <TabsTrigger value="alertes" data-testid="tab-alertes">
+            <Bell className="w-4 h-4 mr-2" />
+            Alertes
+            {searchAlerts && searchAlerts.length > 0 && (
+              <span className="ml-2 bg-primary/10 text-primary text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {searchAlerts.length}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="favoris" data-testid="tab-favoris">
             <Heart className="w-4 h-4 mr-2" />
@@ -291,6 +363,123 @@ export default function TableauDeBord() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   Vous n'avez pas encore d'annonces.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Stats Tab */}
+        <TabsContent value="stats">
+          <Card>
+            <CardHeader>
+              <CardTitle>Statistiques de mes annonces</CardTitle>
+              <CardDescription>Vues, clics et messages reçus par annonce.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingListings ? (
+                <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : listings && listings.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 px-4 text-xs text-muted-foreground uppercase tracking-wide">
+                    <span className="flex-1">Annonce</span>
+                    <span className="flex items-center gap-1 w-20"><Eye className="w-3 h-3" /> Vues</span>
+                    <span className="flex items-center gap-1 w-16"><Phone className="w-3 h-3" /> Tél.</span>
+                    <span className="flex items-center gap-1 w-16"><MessageCircle className="w-3 h-3" /> WA</span>
+                    <span className="flex items-center gap-1 w-16"><MessageSquare className="w-3 h-3" /> Msg</span>
+                  </div>
+                  {listings.map((listing) => (
+                    <ListingStatsRow key={listing.id} listingId={listing.id} title={listing.title} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>Aucune annonce à afficher.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Alertes de recherche Tab */}
+        <TabsContent value="alertes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Alertes de recherche</CardTitle>
+              <CardDescription>Soyez notifié dès qu'une annonce correspond à vos critères.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Créer une alerte */}
+              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <h4 className="font-semibold flex items-center gap-2"><Plus className="w-4 h-4" /> Nouvelle alerte</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Input
+                    placeholder="Mot-clé (ex: iPhone, voiture...)"
+                    value={alertQuery}
+                    onChange={(e) => setAlertQuery(e.target.value)}
+                  />
+                  <Select value={alertCategory || "_all"} onValueChange={(v) => setAlertCategory(v === "_all" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Catégorie (optionnel)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all">Toutes catégories</SelectItem>
+                      {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={alertCity || "_all"} onValueChange={(v) => setAlertCity(v === "_all" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Ville (optionnel)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all">Toutes villes</SelectItem>
+                      {CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => createAlertMutation.mutate({ data: {
+                    query: alertQuery || undefined,
+                    category: alertCategory || undefined,
+                    city: alertCity || undefined,
+                  }})}
+                  disabled={(!alertQuery && !alertCategory && !alertCity) || createAlertMutation.isPending}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Créer l'alerte
+                </Button>
+              </div>
+
+              {/* Liste des alertes */}
+              {searchAlerts && searchAlerts.length > 0 ? (
+                <div className="space-y-3">
+                  {searchAlerts.map((alert: any) => (
+                    <div key={alert.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                      <Bell className="w-4 h-4 text-primary shrink-0" />
+                      <div className="flex-1 flex flex-wrap gap-2">
+                        {alert.query && <Badge variant="secondary">Mot-clé : {alert.query}</Badge>}
+                        {alert.category && <Badge variant="secondary">Cat : {alert.category}</Badge>}
+                        {alert.city && <Badge variant="secondary">Ville : {alert.city}</Badge>}
+                        {!alert.query && !alert.category && !alert.city && <span className="text-sm text-muted-foreground">Toutes les annonces</span>}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0 text-destructive hover:bg-destructive/10"
+                        onClick={() => deleteAlertMutation.mutate({ id: alert.id })}
+                        disabled={deleteAlertMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Bell className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">Aucune alerte configurée.</p>
                 </div>
               )}
             </CardContent>

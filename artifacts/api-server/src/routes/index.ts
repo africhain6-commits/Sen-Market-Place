@@ -9,6 +9,8 @@ import storageRouter from "./storage";
 import favoritesRouter from "./favorites";
 import reviewsRouter from "./reviews";
 import notificationsRouter from "./notifications";
+import reportsRouter from "./reports";
+import searchAlertsRouter from "./search_alerts";
 
 const router: IRouter = Router();
 
@@ -22,5 +24,7 @@ router.use(storageRouter);
 router.use(favoritesRouter);
 router.use(reviewsRouter);
 router.use(notificationsRouter);
+router.use(reportsRouter);
+router.use(searchAlertsRouter);
 
 export default router;

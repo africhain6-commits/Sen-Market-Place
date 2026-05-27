@@ -744,6 +744,186 @@ export const GetAdminStatsResponse = zod.object({
 
 
 /**
+ * @summary Get similar listings (same category, excluding current)
+ */
+export const GetSimilarListingsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSimilarListingsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetSimilarListingsResponse = zod.array(GetSimilarListingsResponseItem)
+
+
+/**
+ * @summary Report a listing
+ */
+export const ReportListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReportListingBody = zod.object({
+  "reason": zod.string(),
+  "details": zod.string().optional()
+})
+
+
+/**
+ * @summary Track a listing event (view or click)
+ */
+export const TrackListingEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const TrackListingEventBody = zod.object({
+  "eventType": zod.string()
+})
+
+
+/**
+ * @summary Get listing stats (owner only)
+ */
+export const GetListingStatsByIdParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetListingStatsByIdResponse = zod.object({
+  "views": zod.number(),
+  "phoneClicks": zod.number(),
+  "whatsappClicks": zod.number(),
+  "messageCount": zod.number()
+})
+
+
+/**
+ * @summary Get current user's search alerts
+ */
+export const GetSearchAlertsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "query": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "minPrice": zod.number().nullish(),
+  "maxPrice": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetSearchAlertsResponse = zod.array(GetSearchAlertsResponseItem)
+
+
+/**
+ * @summary Create a search alert
+ */
+export const CreateSearchAlertBody = zod.object({
+  "query": zod.string().optional(),
+  "category": zod.string().optional(),
+  "city": zod.string().optional(),
+  "minPrice": zod.number().optional(),
+  "maxPrice": zod.number().optional()
+})
+
+
+/**
+ * @summary Delete a search alert
+ */
+export const DeleteSearchAlertParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteSearchAlertResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Get all reports (admin only)
+ */
+export const GetAdminReportsResponseItem = zod.object({
+  "id": zod.number(),
+  "listingId": zod.number(),
+  "reporterId": zod.number(),
+  "reason": zod.string(),
+  "details": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "listing": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).optional(),
+  "reporter": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional()
+})
+export const GetAdminReportsResponse = zod.array(GetAdminReportsResponseItem)
+
+
+/**
+ * @summary Resolve a report
+ */
+export const ResolveReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ResolveReportBody = zod.object({
+  "action": zod.enum(['resolved', 'dismissed'])
+})
+
+export const ResolveReportResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Request a presigned upload URL
  */
 export const RequestUploadUrlBody = zod.object({

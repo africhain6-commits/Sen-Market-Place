@@ -172,6 +172,59 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface ReportInput {
+  reason: string;
+  details?: string;
+}
+
+export interface TrackEventInput {
+  eventType: string;
+}
+
+export interface ListingStats {
+  views: number;
+  phoneClicks: number;
+  whatsappClicks: number;
+  messageCount: number;
+}
+
+export interface SearchAlert {
+  id: number;
+  userId: number;
+  /** @nullable */
+  query?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  minPrice?: number | null;
+  /** @nullable */
+  maxPrice?: number | null;
+  createdAt: string;
+}
+
+export interface SearchAlertInput {
+  query?: string;
+  category?: string;
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+export interface Report {
+  id: number;
+  listingId: number;
+  reporterId: number;
+  reason: string;
+  /** @nullable */
+  details?: string | null;
+  status: string;
+  createdAt: string;
+  listing?: Listing;
+  reporter?: User;
+}
+
 export interface RequestUploadUrlBody {
   name: string;
   size: number;
@@ -213,5 +266,17 @@ export const GetListingsSortOrder = {
 
 export type AdminGetListingsParams = {
 status?: string;
+};
+
+export type ResolveReportBodyAction = typeof ResolveReportBodyAction[keyof typeof ResolveReportBodyAction];
+
+
+export const ResolveReportBodyAction = {
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export type ResolveReportBody = {
+  action: ResolveReportBodyAction;
 };
 

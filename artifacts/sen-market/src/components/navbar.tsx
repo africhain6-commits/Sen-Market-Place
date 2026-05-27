@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell, MapPin } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,6 +133,10 @@ export function Navbar() {
           <Link href="/boutiques" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-boutiques">
             Boutiques &amp; Couturiers
           </Link>
+          <Link href="/carte" className="text-sm font-medium text-white/85 hover:text-white transition-colors flex items-center gap-1" data-testid="link-carte">
+            <MapPin className="w-3.5 h-3.5" />
+            Carte
+          </Link>
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-pub">
             Publicité
           </Link>
@@ -243,6 +247,10 @@ export function Navbar() {
           </Link>
           <Link href="/boutiques" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Boutiques &amp; Couturiers
+          </Link>
+          <Link href="/carte" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+            <MapPin className="w-4 h-4" />
+            Carte des annonces
           </Link>
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Publicité

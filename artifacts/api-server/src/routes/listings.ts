@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, ilike, or, desc, asc, sql, SQL } from "drizzle-orm";
-import { db, listingsTable, usersTable } from "@workspace/db";
+import { eq, and, gte, lte, ilike, or, desc, asc, sql, SQL, ne } from "drizzle-orm";
+import { db, listingsTable, usersTable, listingEventsTable, messagesTable } from "@workspace/db";
 import {
   GetListingsQueryParams,
   CreateListingBody,
@@ -10,6 +10,7 @@ import {
   DeleteListingParams,
 } from "@workspace/api-zod";
 import { requireAuth, optionalAuth } from "../middlewares/auth";
+import { triggerSearchAlerts } from "./search_alerts";
 
 const router: IRouter = Router();
 
@@ -266,6 +267,66 @@ router.delete("/listings/:id", requireAuth, async (req, res): Promise<void> => {
   await db.delete(listingsTable).where(eq(listingsTable.id, params.data.id));
 
   res.json({ message: "Annonce supprimée" });
+});
+
+router.get("/listings/:id/similar", async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
+
+  const [listing] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
+  if (!listing) { res.status(404).json({ error: "Annonce introuvable" }); return; }
+
+  const rows = await db
+    .select({ listing: listingsTable, user: usersTable })
+    .from(listingsTable)
+    .leftJoin(usersTable, eq(listingsTable.userId, usersTable.id))
+    .where(
+      and(
+        eq(listingsTable.category, listing.category),
+        eq(listingsTable.status, "active"),
+        ne(listingsTable.id, id),
+      ),
+    )
+    .orderBy(desc(listingsTable.createdAt))
+    .limit(6);
+
+  res.json(rows.map(({ listing: l, user }) => formatListing(l, user ?? undefined)));
+});
+
+router.post("/listings/:id/track", async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(204).end(); return; }
+  const { eventType } = req.body as { eventType?: string };
+  if (!eventType) { res.status(204).end(); return; }
+
+  await db.insert(listingEventsTable).values({ listingId: id, eventType }).catch(() => {});
+  res.status(204).end();
+});
+
+router.get("/listings/:id/stats", requireAuth, async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
+
+  const [listing] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
+  if (!listing) { res.status(404).json({ error: "Annonce introuvable" }); return; }
+  if (listing.userId !== req.userId!) { res.status(403).json({ error: "Accès interdit" }); return; }
+
+  const events = await db.select().from(listingEventsTable).where(eq(listingEventsTable.listingId, id));
+  const views = events.filter((e) => e.eventType === "view").length;
+  const phoneClicks = events.filter((e) => e.eventType === "phone_click").length;
+  const whatsappClicks = events.filter((e) => e.eventType === "whatsapp_click").length;
+
+  const [msgResult] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(messagesTable)
+    .where(eq(messagesTable.listingId, id));
+
+  res.json({
+    views,
+    phoneClicks,
+    whatsappClicks,
+    messageCount: msgResult?.count ?? 0,
+  });
 });
 
 export default router;
