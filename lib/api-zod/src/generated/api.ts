@@ -87,7 +87,9 @@ export const GetListingsQueryParams = zod.object({
   "maxPrice": zod.coerce.number().optional(),
   "search": zod.coerce.string().optional(),
   "page": zod.coerce.number().optional(),
-  "limit": zod.coerce.number().optional()
+  "limit": zod.coerce.number().optional(),
+  "sortBy": zod.enum(['date', 'price']).optional(),
+  "sortOrder": zod.enum(['asc', 'desc']).optional()
 })
 
 export const GetListingsResponse = zod.object({

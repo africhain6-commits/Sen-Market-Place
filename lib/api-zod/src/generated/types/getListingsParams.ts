@@ -5,6 +5,8 @@
  * Sen Market API - Plateforme d'annonces pour le Sénégal
  * OpenAPI spec version: 0.1.0
  */
+import type { GetListingsSortBy } from './getListingsSortBy';
+import type { GetListingsSortOrder } from './getListingsSortOrder';
 
 export type GetListingsParams = {
 category?: string;
@@ -14,4 +16,6 @@ maxPrice?: number;
 search?: string;
 page?: number;
 limit?: number;
+sortBy?: GetListingsSortBy;
+sortOrder?: GetListingsSortOrder;
 };

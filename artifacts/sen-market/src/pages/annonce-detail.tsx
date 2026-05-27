@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2 } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2, MessageCircle as Whatsapp, Facebook } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -125,24 +126,48 @@ export default function AnnonceDetail() {
           <span>/</span>
           <Link href={`/annonces?category=${listing.category}`} className="hover:text-foreground transition-colors truncate">{listing.category}</Link>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 shrink-0"
-          onClick={async () => {
-            const url = window.location.href;
-            const text = `${listing.title} — ${listing.price ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(listing.price) : "Prix sur demande"} — SenMarket`;
-            if (navigator.share) {
-              await navigator.share({ title: listing.title, text, url }).catch(() => {});
-            } else {
-              await navigator.clipboard.writeText(url).catch(() => {});
-              toast({ title: "Lien copié !", description: "Collez-le dans WhatsApp, SMS ou email." });
-            }
-          }}
-        >
-          <Share2 className="w-4 h-4" />
-          <span className="hidden sm:inline">Partager</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 shrink-0">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Partager</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => {
+                const url = window.location.href;
+                const text = encodeURIComponent(`${listing.title} — SenMarket\n${url}`);
+                window.open(`https://wa.me/?text=${text}`, "_blank");
+              }}
+            >
+              <Whatsapp className="w-4 h-4 text-green-600" />
+              WhatsApp
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => {
+                const url = encodeURIComponent(window.location.href);
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank", "width=600,height=400");
+              }}
+            >
+              <Facebook className="w-4 h-4 text-blue-600" />
+              Facebook
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={async () => {
+                await navigator.clipboard.writeText(window.location.href).catch(() => {});
+                toast({ title: "Lien copié !", description: "Collez-le où vous voulez." });
+              }}
+            >
+              <Share2 className="w-4 h-4" />
+              Copier le lien
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

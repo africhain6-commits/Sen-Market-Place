@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MapPin, Clock, Home as HomeIcon, Zap } from "lucide-react";
+import { Search, MapPin, Clock, Home as HomeIcon, Zap, ArrowUpDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -23,6 +23,9 @@ export default function Annonces() {
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
 
+  const [sortBy, setSortBy] = useState<"date" | "price">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   const [activeFilters, setActiveFilters] = useState({
     search, category, city, minPrice, maxPrice
   });
@@ -33,6 +36,8 @@ export default function Annonces() {
     city: activeFilters.city || undefined,
     minPrice: activeFilters.minPrice ? Number(activeFilters.minPrice) : undefined,
     maxPrice: activeFilters.maxPrice ? Number(activeFilters.maxPrice) : undefined,
+    sortBy,
+    sortOrder,
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -41,6 +46,15 @@ export default function Annonces() {
       search, category, city, minPrice, maxPrice
     });
   };
+
+  const SORT_OPTIONS = [
+    { label: "Plus récentes", sortBy: "date" as const, sortOrder: "desc" as const },
+    { label: "Plus anciennes", sortBy: "date" as const, sortOrder: "asc" as const },
+    { label: "Prix croissant", sortBy: "price" as const, sortOrder: "asc" as const },
+    { label: "Prix décroissant", sortBy: "price" as const, sortOrder: "desc" as const },
+  ];
+
+  const currentSort = SORT_OPTIONS.find(o => o.sortBy === sortBy && o.sortOrder === sortOrder) ?? SORT_OPTIONS[0];
 
   const formatPrice = (price?: number | null) => {
     if (price == null) return "Prix sur demande";
@@ -144,10 +158,29 @@ export default function Annonces() {
 
         {/* Results */}
         <div className="flex-1">
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6 flex justify-between items-center gap-4">
             <h1 className="text-2xl font-bold">
               {listingsPage?.total != null ? `${listingsPage.total} annonce${listingsPage.total !== 1 ? 's' : ''}` : "Annonces"}
             </h1>
+            <Select
+              value={`${sortBy}-${sortOrder}`}
+              onValueChange={(val) => {
+                const opt = SORT_OPTIONS.find(o => `${o.sortBy}-${o.sortOrder}` === val);
+                if (opt) { setSortBy(opt.sortBy); setSortOrder(opt.sortOrder); }
+              }}
+            >
+              <SelectTrigger className="w-48 shrink-0">
+                <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue>{currentSort.label}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map(o => (
+                  <SelectItem key={`${o.sortBy}-${o.sortOrder}`} value={`${o.sortBy}-${o.sortOrder}`}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {isLoading ? (

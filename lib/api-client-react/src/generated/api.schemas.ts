@@ -146,7 +146,25 @@ maxPrice?: number;
 search?: string;
 page?: number;
 limit?: number;
+sortBy?: GetListingsSortBy;
+sortOrder?: GetListingsSortOrder;
 };
+
+export type GetListingsSortBy = typeof GetListingsSortBy[keyof typeof GetListingsSortBy];
+
+
+export const GetListingsSortBy = {
+  date: 'date',
+  price: 'price',
+} as const;
+
+export type GetListingsSortOrder = typeof GetListingsSortOrder[keyof typeof GetListingsSortOrder];
+
+
+export const GetListingsSortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type AdminGetListingsParams = {
 status?: string;

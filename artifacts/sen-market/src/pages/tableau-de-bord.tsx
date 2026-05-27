@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMyListings, useGetConversations, useDeleteListing, getGetMyListingsQueryKey, getGetConversationsQueryKey } from "@workspace/api-client-react";
+import { useGetMyListings, useGetConversations, useDeleteListing, useUpdateListing, getGetMyListingsQueryKey, getGetConversationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil } from "lucide-react";
+import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil, Pause, Play } from "lucide-react";
 import { useState } from "react";
 import { BoostModal } from "@/components/boost-modal";
 
@@ -39,6 +39,17 @@ export default function TableauDeBord() {
         toast({ title: "Annonce supprimée" });
       },
       onError: () => toast({ title: "Erreur", description: "Impossible de supprimer.", variant: "destructive" }),
+    },
+  });
+
+  const statusMutation = useUpdateListing({
+    mutation: {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: getGetMyListingsQueryKey() });
+        const isPausing = variables.data.status === "inactive";
+        toast({ title: isPausing ? "Annonce mise en pause" : "Annonce réactivée" });
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible de modifier le statut.", variant: "destructive" }),
     },
   });
 
@@ -155,6 +166,25 @@ export default function TableauDeBord() {
                             Modifier
                           </Button>
                         </Link>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-xs h-7"
+                          disabled={statusMutation.isPending}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            statusMutation.mutate({
+                              id: listing.id,
+                              data: { status: listing.status === "active" ? "inactive" : "active" },
+                            });
+                          }}
+                        >
+                          {listing.status === "active" ? (
+                            <><Pause className="w-3 h-3" /> Pause</>
+                          ) : (
+                            <><Play className="w-3 h-3" /> Activer</>
+                          )}
+                        </Button>
                         {!(listing as any).isBoosted && listing.status === 'active' && (
                           <Button
                             size="sm"

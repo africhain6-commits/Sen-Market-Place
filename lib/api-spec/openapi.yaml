@@ -139,6 +139,16 @@ paths:
           in: query
           schema:
             type: integer
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [date, price]
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
       responses:
         "200":
           description: OK

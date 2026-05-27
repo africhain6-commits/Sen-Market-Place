@@ -11,6 +11,8 @@ export * from './authResponse';
 export * from './categoryStat';
 export * from './conversation';
 export * from './getListingsParams';
+export * from './getListingsSortBy';
+export * from './getListingsSortOrder';
 export * from './healthStatus';
 export * from './listing';
 export * from './listingInput';
