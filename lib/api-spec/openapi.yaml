@@ -295,6 +295,67 @@ paths:
         "401":
           description: Unauthorized
 
+  /listings/price-estimate:
+    get:
+      operationId: getPriceEstimate
+      tags: [listings]
+      summary: Get price estimate for a category/city
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceEstimate"
+
+  /listings/neighborhoods:
+    get:
+      operationId: getNeighborhoods
+      tags: [listings]
+      summary: Get Dakar neighborhood stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeighborhoodStat"
+
+  /listings/{id}/price-history:
+    get:
+      operationId: getPriceHistory
+      tags: [listings]
+      summary: Get price history for a listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PriceHistoryEntry"
+        "404":
+          description: Not found
+
   /messages/conversations:
     get:
       operationId: getConversations
@@ -1307,6 +1368,62 @@ components:
         - message
         - isRead
         - createdAt
+
+    PriceHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        listingId:
+          type: integer
+        price:
+          type: number
+        recordedAt:
+          type: string
+      required:
+        - id
+        - listingId
+        - price
+        - recordedAt
+
+    PriceEstimate:
+      type: object
+      properties:
+        category:
+          type: string
+        city:
+          type: ["string", "null"]
+        min:
+          type: ["number", "null"]
+        max:
+          type: ["number", "null"]
+        median:
+          type: ["number", "null"]
+        count:
+          type: integer
+      required:
+        - category
+        - count
+
+    NeighborhoodStat:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        count:
+          type: integer
+        avgPrice:
+          type: ["number", "null"]
+        categories:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - name
+        - slug
+        - count
 
     ReportInput:
       type: object

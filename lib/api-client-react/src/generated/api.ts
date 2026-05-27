@@ -26,6 +26,7 @@ import type {
   CategoryStat,
   Conversation,
   GetListingsParams,
+  GetPriceEstimateParams,
   HealthStatus,
   Listing,
   ListingInput,
@@ -36,7 +37,10 @@ import type {
   Message,
   MessageInput,
   MessageResponse,
+  NeighborhoodStat,
   Notification,
+  PriceEstimate,
+  PriceHistoryEntry,
   RegisterInput,
   Report,
   ReportInput,
@@ -1023,6 +1027,244 @@ export function useGetMyListings<TData = Awaited<ReturnType<typeof getMyListings
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyListingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPriceEstimateUrl = (params: GetPriceEstimateParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/listings/price-estimate?${stringifiedParams}` : `/api/listings/price-estimate`
+}
+
+/**
+ * @summary Get price estimate for a category/city
+ */
+export const getPriceEstimate = async (params: GetPriceEstimateParams, options?: RequestInit): Promise<PriceEstimate> => {
+
+  return customFetch<PriceEstimate>(getGetPriceEstimateUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPriceEstimateQueryKey = (params?: GetPriceEstimateParams,) => {
+    return [
+    `/api/listings/price-estimate`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPriceEstimateQueryOptions = <TData = Awaited<ReturnType<typeof getPriceEstimate>>, TError = ErrorType<unknown>>(params: GetPriceEstimateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPriceEstimate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPriceEstimateQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPriceEstimate>>> = ({ signal }) => getPriceEstimate(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPriceEstimate>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPriceEstimateQueryResult = NonNullable<Awaited<ReturnType<typeof getPriceEstimate>>>
+export type GetPriceEstimateQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get price estimate for a category/city
+ */
+
+export function useGetPriceEstimate<TData = Awaited<ReturnType<typeof getPriceEstimate>>, TError = ErrorType<unknown>>(
+ params: GetPriceEstimateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPriceEstimate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPriceEstimateQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetNeighborhoodsUrl = () => {
+
+
+
+
+  return `/api/listings/neighborhoods`
+}
+
+/**
+ * @summary Get Dakar neighborhood stats
+ */
+export const getNeighborhoods = async ( options?: RequestInit): Promise<NeighborhoodStat[]> => {
+
+  return customFetch<NeighborhoodStat[]>(getGetNeighborhoodsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNeighborhoodsQueryKey = () => {
+    return [
+    `/api/listings/neighborhoods`
+    ] as const;
+    }
+
+
+export const getGetNeighborhoodsQueryOptions = <TData = Awaited<ReturnType<typeof getNeighborhoods>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNeighborhoods>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNeighborhoodsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNeighborhoods>>> = ({ signal }) => getNeighborhoods({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNeighborhoods>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNeighborhoodsQueryResult = NonNullable<Awaited<ReturnType<typeof getNeighborhoods>>>
+export type GetNeighborhoodsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Dakar neighborhood stats
+ */
+
+export function useGetNeighborhoods<TData = Awaited<ReturnType<typeof getNeighborhoods>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNeighborhoods>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNeighborhoodsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPriceHistoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/listings/${id}/price-history`
+}
+
+/**
+ * @summary Get price history for a listing
+ */
+export const getPriceHistory = async (id: number, options?: RequestInit): Promise<PriceHistoryEntry[]> => {
+
+  return customFetch<PriceHistoryEntry[]>(getGetPriceHistoryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPriceHistoryQueryKey = (id: number,) => {
+    return [
+    `/api/listings/${id}/price-history`
+    ] as const;
+    }
+
+
+export const getGetPriceHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getPriceHistory>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPriceHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPriceHistoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPriceHistory>>> = ({ signal }) => getPriceHistory(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPriceHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPriceHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getPriceHistory>>>
+export type GetPriceHistoryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get price history for a listing
+ */
+
+export function useGetPriceHistory<TData = Awaited<ReturnType<typeof getPriceHistory>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPriceHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPriceHistoryQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

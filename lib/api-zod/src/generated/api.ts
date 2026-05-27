@@ -295,6 +295,53 @@ export const GetMyListingsResponse = zod.array(GetMyListingsResponseItem)
 
 
 /**
+ * @summary Get price estimate for a category/city
+ */
+export const GetPriceEstimateQueryParams = zod.object({
+  "category": zod.coerce.string(),
+  "city": zod.coerce.string().optional()
+})
+
+export const GetPriceEstimateResponse = zod.object({
+  "category": zod.string(),
+  "city": zod.string().nullish(),
+  "min": zod.number().nullish(),
+  "max": zod.number().nullish(),
+  "median": zod.number().nullish(),
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Get Dakar neighborhood stats
+ */
+export const GetNeighborhoodsResponseItem = zod.object({
+  "name": zod.string(),
+  "slug": zod.string(),
+  "count": zod.number(),
+  "avgPrice": zod.number().nullish(),
+  "categories": zod.record(zod.string(), zod.number()).optional()
+})
+export const GetNeighborhoodsResponse = zod.array(GetNeighborhoodsResponseItem)
+
+
+/**
+ * @summary Get price history for a listing
+ */
+export const GetPriceHistoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPriceHistoryResponseItem = zod.object({
+  "id": zod.number(),
+  "listingId": zod.number(),
+  "price": zod.number(),
+  "recordedAt": zod.string()
+})
+export const GetPriceHistoryResponse = zod.array(GetPriceHistoryResponseItem)
+
+
+/**
  * @summary Get all conversations for the current user
  */
 export const GetConversationsResponseItem = zod.object({

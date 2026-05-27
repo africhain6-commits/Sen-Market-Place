@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell, MapPin } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell, MapPin, GitCompare, Building2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -137,6 +137,14 @@ export function Navbar() {
             <MapPin className="w-3.5 h-3.5" />
             Carte
           </Link>
+          <Link href="/quartiers" className="text-sm font-medium text-white/85 hover:text-white transition-colors flex items-center gap-1" data-testid="link-quartiers">
+            <Building2 className="w-3.5 h-3.5" />
+            Quartiers
+          </Link>
+          <Link href="/comparer" className="text-sm font-medium text-white/85 hover:text-white transition-colors flex items-center gap-1" data-testid="link-comparer">
+            <GitCompare className="w-3.5 h-3.5" />
+            Comparer
+          </Link>
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-pub">
             Publicité
           </Link>
@@ -251,6 +259,14 @@ export function Navbar() {
           <Link href="/carte" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
             <MapPin className="w-4 h-4" />
             Carte des annonces
+          </Link>
+          <Link href="/quartiers" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+            <Building2 className="w-4 h-4" />
+            Quartiers de Dakar
+          </Link>
+          <Link href="/comparer" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+            <GitCompare className="w-4 h-4" />
+            Comparer des annonces
           </Link>
           <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
             Publicité

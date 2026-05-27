@@ -172,6 +172,37 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface PriceHistoryEntry {
+  id: number;
+  listingId: number;
+  price: number;
+  recordedAt: string;
+}
+
+export interface PriceEstimate {
+  category: string;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  min?: number | null;
+  /** @nullable */
+  max?: number | null;
+  /** @nullable */
+  median?: number | null;
+  count: number;
+}
+
+export type NeighborhoodStatCategories = {[key: string]: number};
+
+export interface NeighborhoodStat {
+  name: string;
+  slug: string;
+  count: number;
+  /** @nullable */
+  avgPrice?: number | null;
+  categories?: NeighborhoodStatCategories;
+}
+
 export interface ReportInput {
   reason: string;
   details?: string;
@@ -263,6 +294,11 @@ export const GetListingsSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type GetPriceEstimateParams = {
+category: string;
+city?: string;
+};
 
 export type AdminGetListingsParams = {
 status?: string;

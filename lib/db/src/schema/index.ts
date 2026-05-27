@@ -7,3 +7,4 @@ export * from "./notifications";
 export * from "./reports";
 export * from "./search_alerts";
 export * from "./listing_events";
+export * from "./price_history";

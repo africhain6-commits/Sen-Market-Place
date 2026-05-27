@@ -11,11 +11,13 @@ import reviewsRouter from "./reviews";
 import notificationsRouter from "./notifications";
 import reportsRouter from "./reports";
 import searchAlertsRouter from "./search_alerts";
+import priceHistoryRouter from "./price_history";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(priceHistoryRouter);
 router.use(listingsRouter);
 router.use(messagesRouter);
 router.use(usersRouter);

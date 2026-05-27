@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCreateListing, getGetMyListingsQueryKey } from "@workspace/api-client-react";
+import { useCreateListing, useGetPriceEstimate, getGetMyListingsQueryKey } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { PhotoUploader } from "@/components/photo-uploader";
-import { Info } from "lucide-react";
+import { Info, TrendingUp } from "lucide-react";
 
 const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin"];
 const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
@@ -40,11 +40,16 @@ const publishSchema = z.object({
 
 type PublishFormValues = z.infer<typeof publishSchema>;
 
+const formatPrice = (p: number) =>
+  new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF", maximumFractionDigits: 0 }).format(p);
+
 export default function Publier() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading, isFetching } = useAuth();
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState<string[]>([]);
+  const [estimateCategory, setEstimateCategory] = useState("");
+  const [estimateCity, setEstimateCity] = useState("");
 
   useEffect(() => {
     if (!isLoading && !isFetching && !isAuthenticated) {
@@ -65,6 +70,19 @@ export default function Publier() {
       city: "",
     },
   });
+
+  const watchCategory = form.watch("category");
+  const watchCity = form.watch("city");
+
+  const { data: priceEstimate } = useGetPriceEstimate(
+    { category: watchCategory, city: watchCity || undefined } as any,
+    {
+      query: {
+        enabled: !!watchCategory,
+        queryKey: ["price-estimate", watchCategory, watchCity],
+      },
+    }
+  );
 
   const createListingMutation = useCreateListing({
     mutation: {
@@ -185,6 +203,21 @@ export default function Publier() {
                       <FormControl>
                         <Input type="text" inputMode="numeric" placeholder="Ex: 5.800.000 ou 5800000" {...field} data-testid="input-price" />
                       </FormControl>
+                      {priceEstimate && (priceEstimate as any).count > 0 && (
+                        <div className="mt-2 flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                          <TrendingUp className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                          <div className="text-blue-800">
+                            <strong>Estimation :</strong> Pour la catégorie{" "}
+                            <strong>{(priceEstimate as any).category}</strong>
+                            {(priceEstimate as any).city && <> à {(priceEstimate as any).city}</>}
+                            , les prix vont de{" "}
+                            <strong>{formatPrice((priceEstimate as any).min)}</strong> à{" "}
+                            <strong>{formatPrice((priceEstimate as any).max)}</strong>{" "}
+                            (médiane : {formatPrice((priceEstimate as any).median)}).
+                            <span className="ml-1 text-blue-600 text-xs">({(priceEstimate as any).count} annonces)</span>
+                          </div>
+                        </div>
+                      )}
                       <FormDescription>Formats acceptés : 5800000 · 5.800.000 · 5 800 000. Laissez vide si prix sur demande.</FormDescription>
                       <FormMessage />
                     </FormItem>

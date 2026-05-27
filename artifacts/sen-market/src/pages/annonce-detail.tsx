@@ -6,6 +6,7 @@ import {
   useGetSimilarListings,
   useReportListing,
   useTrackListingEvent,
+  useGetPriceHistory,
   getGetListingQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2, MessageCircle as Whatsapp, Facebook, Flag } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2, MessageCircle as Whatsapp, Facebook, Flag, TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDistanceToNow, format } from "date-fns";
@@ -63,6 +64,13 @@ export default function AnnonceDetail() {
     query: {
       enabled: !!listingId,
       queryKey: ["similar", listingId],
+    }
+  });
+
+  const { data: priceHistory } = useGetPriceHistory(listingId, {
+    query: {
+      enabled: !!listingId,
+      queryKey: ["price-history", listingId],
     }
   });
 
@@ -315,6 +323,43 @@ export default function AnnonceDetail() {
             <h2 className="text-xl font-semibold mb-4">Description</h2>
             <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">{listing.description}</div>
           </div>
+
+          {/* Historique des prix */}
+          {priceHistory && (priceHistory as any[]).length > 1 && (() => {
+            const history = priceHistory as any[];
+            const latest = history[history.length - 1];
+            const previous = history[history.length - 2];
+            const diff = latest.price - previous.price;
+            const pct = ((diff / previous.price) * 100).toFixed(1);
+            const dropped = diff < 0;
+            return (
+              <div className="bg-card border rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <BarChart2 className="w-5 h-5 text-primary" />
+                  Historique des prix
+                </h2>
+                <div className={`flex items-center gap-3 mb-4 p-3 rounded-lg ${dropped ? "bg-green-50 border border-green-200" : "bg-orange-50 border border-orange-200"}`}>
+                  {dropped ? <TrendingDown className="w-5 h-5 text-green-600" /> : <TrendingUp className="w-5 h-5 text-orange-600" />}
+                  <div>
+                    <p className={`font-semibold text-sm ${dropped ? "text-green-700" : "text-orange-700"}`}>
+                      {dropped ? "Prix réduit" : "Prix augmenté"} : {diff > 0 ? "+" : ""}{formatPrice(Math.abs(diff))} ({diff > 0 ? "+" : ""}{pct}%)
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Depuis {format(new Date(previous.recordedAt), "d MMMM yyyy", { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {history.map((entry: any, i: number) => (
+                    <div key={entry.id} className={`flex items-center justify-between p-2 rounded text-sm ${i === history.length - 1 ? "bg-primary/5 font-medium" : "text-muted-foreground"}`}>
+                      <span>{format(new Date(entry.recordedAt), "d MMM yyyy", { locale: fr })}</span>
+                      <span className={i === history.length - 1 ? "text-primary font-bold" : ""}>{formatPrice(entry.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Annonces similaires */}
           {similarListings && (similarListings as any[]).length > 0 && (

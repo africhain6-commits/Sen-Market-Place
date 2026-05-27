@@ -19,6 +19,8 @@ import Boutiques from "@/pages/boutiques";
 import Pub from "@/pages/pub";
 import Modifier from "@/pages/modifier";
 import Carte from "@/pages/carte";
+import Quartiers from "@/pages/quartiers";
+import Comparer from "@/pages/comparer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +48,8 @@ function Router() {
         <Route path="/publicite" component={Pub} />
         <Route path="/modifier/:id" component={Modifier} />
         <Route path="/carte" component={Carte} />
+        <Route path="/quartiers" component={Quartiers} />
+        <Route path="/comparer" component={Comparer} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
