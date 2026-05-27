@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Package, Clock, ExternalLink, Zap } from "lucide-react";
+import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil } from "lucide-react";
 import { useState } from "react";
 import { BoostModal } from "@/components/boost-modal";
 
@@ -144,6 +144,17 @@ export default function TableauDeBord() {
                             {listing.status === 'active' ? "En ligne" : "Inactif"}
                           </Badge>
                         </div>
+                        <Link href={`/modifier/${listing.id}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-xs h-7"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Modifier
+                          </Button>
+                        </Link>
                         {!(listing as any).isBoosted && listing.status === 'active' && (
                           <Button
                             size="sm"

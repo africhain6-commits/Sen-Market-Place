@@ -17,6 +17,7 @@ import Profil from "@/pages/profil";
 import Admin from "@/pages/admin";
 import Boutiques from "@/pages/boutiques";
 import Pub from "@/pages/pub";
+import Modifier from "@/pages/modifier";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/admin" component={Admin} />
         <Route path="/boutiques" component={Boutiques} />
         <Route path="/publicite" component={Pub} />
+        <Route path="/modifier/:id" component={Modifier} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
