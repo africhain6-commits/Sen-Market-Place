@@ -19,10 +19,21 @@ import { Info } from "lucide-react";
 const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin"];
 const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
 
+function parseFrenchPrice(val: string): number | undefined {
+  if (!val || val.trim() === "") return undefined;
+  const cleaned = val.trim().replace(/[\s.]/g, "").replace(",", ".");
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? undefined : num;
+}
+
 const publishSchema = z.object({
   title: z.string().min(5, "Le titre doit contenir au moins 5 caractères.").max(100, "Titre trop long."),
   description: z.string().min(20, "La description doit contenir au moins 20 caractères."),
-  price: z.coerce.number().optional(),
+  price: z.string().optional().transform((val) => {
+    if (!val || val.trim() === "") return undefined;
+    const parsed = parseFrenchPrice(val);
+    return parsed;
+  }).pipe(z.number().positive("Le prix doit être positif.").optional()),
   category: z.string().min(1, "Veuillez sélectionner une catégorie."),
   city: z.string().min(1, "Veuillez sélectionner une ville."),
 });
@@ -172,9 +183,9 @@ export default function Publier() {
                     <FormItem>
                       <FormLabel>Prix (FCFA)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 500000" {...field} data-testid="input-price" />
+                        <Input type="text" inputMode="numeric" placeholder="Ex: 5.800.000 ou 5800000" {...field} data-testid="input-price" />
                       </FormControl>
-                      <FormDescription>Laissez vide si prix sur demande.</FormDescription>
+                      <FormDescription>Formats acceptés : 5800000 · 5.800.000 · 5 800 000. Laissez vide si prix sur demande.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

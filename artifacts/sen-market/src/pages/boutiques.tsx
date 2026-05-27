@@ -144,9 +144,9 @@ export default function Boutiques() {
                 </Card>
               ))}
             </div>
-          ) : listings && listings.length > 0 ? (
+          ) : listings && listings.listings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {listings.slice(0, 8).map((listing) => (
+              {listings.listings.slice(0, 8).map((listing) => (
                 <Link key={listing.id} href={`/annonces/${listing.id}`}>
                   <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col group">
                     <div className="relative h-48 bg-muted overflow-hidden">
