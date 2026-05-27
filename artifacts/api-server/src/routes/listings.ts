@@ -223,6 +223,24 @@ router.patch("/listings/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(formatListing(updated, user));
 });
 
+router.post("/listings/:id/renew", requireAuth, async (req, res): Promise<void> => {
+  const id = parseInt(String(req.params.id), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
+
+  const [existing] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Annonce introuvable" }); return; }
+  if (existing.userId !== req.userId) { res.status(403).json({ error: "Accès interdit" }); return; }
+
+  const [updated] = await db
+    .update(listingsTable)
+    .set({ createdAt: new Date(), updatedAt: new Date() })
+    .where(eq(listingsTable.id, id))
+    .returning();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
+  res.json(formatListing(updated, user));
+});
+
 router.delete("/listings/:id", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteListingParams.safeParse(req.params);
   if (!params.success) {

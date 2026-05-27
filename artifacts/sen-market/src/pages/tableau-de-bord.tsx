@@ -1,6 +1,17 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMyListings, useGetConversations, useDeleteListing, useUpdateListing, getGetMyListingsQueryKey, getGetConversationsQueryKey } from "@workspace/api-client-react";
+import {
+  useGetMyListings,
+  useGetConversations,
+  useDeleteListing,
+  useUpdateListing,
+  useRenewListing,
+  useGetFavorites,
+  useRemoveFavorite,
+  getGetMyListingsQueryKey,
+  getGetConversationsQueryKey,
+  getGetFavoritesQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -22,9 +33,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil, Pause, Play } from "lucide-react";
+import { MessageSquare, Package, Clock, ExternalLink, Zap, Pencil, Pause, Play, Heart, RefreshCw, MapPin } from "lucide-react";
 import { useState } from "react";
 import { BoostModal } from "@/components/boost-modal";
+
+const formatPrice = (price?: number | null) => {
+  if (price == null) return "Sur demande";
+  return new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF", maximumFractionDigits: 0 }).format(price);
+};
 
 export default function TableauDeBord() {
   const [, setLocation] = useLocation();
@@ -53,6 +69,25 @@ export default function TableauDeBord() {
     },
   });
 
+  const renewMutation = useRenewListing({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetMyListingsQueryKey() });
+        toast({ title: "Annonce renouvelée !", description: "Votre annonce est de nouveau en tête des résultats." });
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible de renouveler.", variant: "destructive" }),
+    },
+  });
+
+  const removeFavoriteMutation = useRemoveFavorite({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetFavoritesQueryKey() });
+        toast({ title: "Retiré des favoris" });
+      },
+    },
+  });
+
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       setLocation("/connexion");
@@ -73,6 +108,13 @@ export default function TableauDeBord() {
     }
   });
 
+  const { data: favorites, isLoading: isLoadingFavorites } = useGetFavorites({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetFavoritesQueryKey(),
+    }
+  });
+
   if (isAuthLoading || !isAuthenticated) return null;
 
   return (
@@ -89,14 +131,23 @@ export default function TableauDeBord() {
       <h1 className="text-3xl font-bold mb-8">Tableau de bord</h1>
 
       <Tabs defaultValue="annonces" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+        <TabsList className="grid w-full max-w-lg grid-cols-3 mb-8">
           <TabsTrigger value="annonces" data-testid="tab-annonces">
             <Package className="w-4 h-4 mr-2" />
             Mes annonces
           </TabsTrigger>
+          <TabsTrigger value="favoris" data-testid="tab-favoris">
+            <Heart className="w-4 h-4 mr-2" />
+            Favoris
+            {favorites && favorites.length > 0 && (
+              <span className="ml-2 bg-primary/10 text-primary text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {favorites.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="messages" data-testid="tab-messages">
             <MessageSquare className="w-4 h-4 mr-2" />
-            Mes messages
+            Messages
             {conversations && conversations.some(c => c.unreadCount > 0) && (
               <span className="ml-2 bg-destructive text-destructive-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs">
                 {conversations.filter(c => c.unreadCount > 0).length}
@@ -142,9 +193,7 @@ export default function TableauDeBord() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right flex flex-col items-end gap-2">
-                        <div className="font-semibold">
-                          {listing.price ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(listing.price) : "Sur demande"}
-                        </div>
+                        <div className="font-semibold">{formatPrice(listing.price)}</div>
                         <div className="flex items-center gap-2">
                           {(listing as any).isBoosted && (
                             <Badge className="bg-[#D4AF37] text-[#0A2463] border-0 gap-1">
@@ -152,20 +201,27 @@ export default function TableauDeBord() {
                             </Badge>
                           )}
                           <Badge variant={listing.status === 'active' ? "default" : "secondary"}>
-                            {listing.status === 'active' ? "En ligne" : "Inactif"}
+                            {listing.status === 'active' ? "En ligne" : listing.status === 'pending' ? "En attente" : "Inactif"}
                           </Badge>
                         </div>
                         <Link href={`/modifier/${listing.id}`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-xs h-7"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={(e) => e.stopPropagation()}>
                             <Pencil className="w-3 h-3" />
                             Modifier
                           </Button>
                         </Link>
+                        {listing.status === "active" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-xs h-7 border-primary/40 text-primary hover:bg-primary/5"
+                            disabled={renewMutation.isPending}
+                            onClick={() => renewMutation.mutate({ id: listing.id })}
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Renouveler
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -235,6 +291,79 @@ export default function TableauDeBord() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   Vous n'avez pas encore d'annonces.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="favoris">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mes favoris</CardTitle>
+              <CardDescription>Les annonces que vous avez sauvegardées.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingFavorites ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-40 w-full" />)}
+                </div>
+              ) : favorites && favorites.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {favorites.map((listing: any) => (
+                    <div key={listing.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow group">
+                      <Link href={`/annonces/${listing.id}`}>
+                        <div className="relative h-36 bg-muted overflow-hidden">
+                          {listing.photos?.[0] ? (
+                            <img src={listing.photos[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-10 h-10 text-muted-foreground opacity-20" />
+                            </div>
+                          )}
+                          {listing.isBoosted && (
+                            <span className="absolute top-2 left-2 bg-[#D4AF37] text-[#0A2463] text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                              <Zap className="w-3 h-3" /> VEDETTE
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                      <div className="p-3">
+                        <Link href={`/annonces/${listing.id}`} className="font-semibold text-sm text-primary hover:underline line-clamp-1 block">
+                          {listing.title}
+                        </Link>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="font-bold text-primary text-sm">{formatPrice(listing.price)}</span>
+                          {listing.city && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />{listing.city}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">{listing.category}</Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-destructive hover:bg-destructive/10 gap-1"
+                            onClick={() => removeFavoriteMutation.mutate({ listingId: listing.id })}
+                            disabled={removeFavoriteMutation.isPending}
+                          >
+                            <Heart className="w-3 h-3 fill-destructive" />
+                            Retirer
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Heart className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>Aucun favori pour l'instant.</p>
+                  <Link href="/annonces">
+                    <Button variant="outline" className="mt-4">Parcourir les annonces</Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

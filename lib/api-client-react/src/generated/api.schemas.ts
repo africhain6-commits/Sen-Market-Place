@@ -127,6 +127,51 @@ export interface Conversation {
   unreadCount: number;
 }
 
+export type AdminStatsListingsByCategoryItem = {
+  category: string;
+  count: number;
+};
+
+export interface AdminStats {
+  totalUsers: number;
+  totalListings: number;
+  activeListings: number;
+  pendingListings: number;
+  rejectedListings: number;
+  boostedListings: number;
+  totalFavorites: number;
+  totalReviews: number;
+  listingsByCategory: AdminStatsListingsByCategoryItem[];
+}
+
+export interface Review {
+  id: number;
+  fromUserId: number;
+  toUserId: number;
+  rating: number;
+  /** @nullable */
+  comment?: string | null;
+  createdAt: string;
+  fromUser?: User;
+}
+
+export interface ReviewInput {
+  toUserId: number;
+  rating: number;
+  comment?: string;
+}
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  message: string;
+  isRead: boolean;
+  /** @nullable */
+  relatedId?: number | null;
+  createdAt: string;
+}
+
 export interface RequestUploadUrlBody {
   name: string;
   size: number;

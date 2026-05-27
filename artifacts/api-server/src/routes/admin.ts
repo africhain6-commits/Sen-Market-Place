@@ -1,7 +1,9 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, listingsTable, usersTable } from "@workspace/db";
+import { db, listingsTable, usersTable, favoritesTable, reviewsTable } from "@workspace/db";
+import { sql as sqlExpr } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { createNotification } from "./notifications";
 
 const router: IRouter = Router();
 
@@ -81,6 +83,13 @@ router.patch("/admin/listings/:id/approve", requireAuth, async (req, res): Promi
     return;
   }
 
+  await createNotification(
+    updated.userId,
+    "listing_approved",
+    `Votre annonce « ${updated.title} » a été approuvée et est maintenant en ligne.`,
+    updated.id,
+  );
+
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
   res.json(formatListing(updated, user));
 });
@@ -103,6 +112,13 @@ router.patch("/admin/listings/:id/reject", requireAuth, async (req, res): Promis
     res.status(404).json({ error: "Annonce introuvable" });
     return;
   }
+
+  await createNotification(
+    updated.userId,
+    "listing_rejected",
+    `Votre annonce « ${updated.title} » a été refusée. Vous pouvez la modifier et la resoumettre.`,
+    updated.id,
+  );
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId));
   res.json(formatListing(updated, user));
@@ -225,6 +241,37 @@ router.patch("/admin/users/:id/revoke-admin", requireAuth, async (req, res): Pro
     return;
   }
   res.json({ message: `Les droits admin de ${updated.name} ont été retirés.` });
+});
+
+router.get("/admin/stats", requireAuth, async (req, res): Promise<void> => {
+  if (!(await checkAdmin(req.userId!))) { res.status(403).json({ error: "Accès interdit" }); return; }
+
+  const [usersCount] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(usersTable);
+  const [totalListings] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(listingsTable);
+  const [activeListings] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(listingsTable).where(eq(listingsTable.status, "active"));
+  const [pendingListings] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(listingsTable).where(eq(listingsTable.status, "pending"));
+  const [rejectedListings] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(listingsTable).where(eq(listingsTable.status, "rejected"));
+  const [boostedListings] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(listingsTable).where(eq(listingsTable.isBoosted, true));
+  const [totalFavorites] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(favoritesTable);
+  const [totalReviews] = await db.select({ count: sqlExpr<number>`cast(count(*) as int)` }).from(reviewsTable);
+  const listingsByCategory = await db
+    .select({ category: listingsTable.category, count: sqlExpr<number>`cast(count(*) as int)` })
+    .from(listingsTable)
+    .where(eq(listingsTable.status, "active"))
+    .groupBy(listingsTable.category)
+    .orderBy(sqlExpr`count(*) desc`);
+
+  res.json({
+    totalUsers: usersCount?.count ?? 0,
+    totalListings: totalListings?.count ?? 0,
+    activeListings: activeListings?.count ?? 0,
+    pendingListings: pendingListings?.count ?? 0,
+    rejectedListings: rejectedListings?.count ?? 0,
+    boostedListings: boostedListings?.count ?? 0,
+    totalFavorites: totalFavorites?.count ?? 0,
+    totalReviews: totalReviews?.count ?? 0,
+    listingsByCategory,
+  });
 });
 
 router.delete("/admin/listings/:id", requireAuth, async (req, res): Promise<void> => {

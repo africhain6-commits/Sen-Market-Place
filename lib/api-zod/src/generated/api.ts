@@ -576,6 +576,174 @@ export const AdminBanUserResponse = zod.object({
 
 
 /**
+ * @summary Renew a listing (reset to top of list)
+ */
+export const RenewListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RenewListingResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get current user's favorite listings
+ */
+export const GetFavoritesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().nullish(),
+  "category": zod.string(),
+  "city": zod.string(),
+  "photos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "userId": zod.number(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetFavoritesResponse = zod.array(GetFavoritesResponseItem)
+
+
+/**
+ * @summary Add a listing to favorites
+ */
+export const AddFavoriteParams = zod.object({
+  "listingId": zod.coerce.number()
+})
+
+export const AddFavoriteResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Remove a listing from favorites
+ */
+export const RemoveFavoriteParams = zod.object({
+  "listingId": zod.coerce.number()
+})
+
+export const RemoveFavoriteResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Post a review for a seller
+ */
+export const CreateReviewBody = zod.object({
+  "toUserId": zod.number(),
+  "rating": zod.number(),
+  "comment": zod.string().optional()
+})
+
+
+/**
+ * @summary Get reviews for a user
+ */
+export const GetUserReviewsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetUserReviewsResponseItem = zod.object({
+  "id": zod.number(),
+  "fromUserId": zod.number(),
+  "toUserId": zod.number(),
+  "rating": zod.number(),
+  "comment": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "fromUser": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.string()
+}).optional()
+})
+export const GetUserReviewsResponse = zod.array(GetUserReviewsResponseItem)
+
+
+/**
+ * @summary Get current user's notifications
+ */
+export const GetNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.string(),
+  "message": zod.string(),
+  "isRead": zod.boolean(),
+  "relatedId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetNotificationsResponse = zod.array(GetNotificationsResponseItem)
+
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Get global platform statistics
+ */
+export const GetAdminStatsResponse = zod.object({
+  "totalUsers": zod.number(),
+  "totalListings": zod.number(),
+  "activeListings": zod.number(),
+  "pendingListings": zod.number(),
+  "rejectedListings": zod.number(),
+  "boostedListings": zod.number(),
+  "totalFavorites": zod.number(),
+  "totalReviews": zod.number(),
+  "listingsByCategory": zod.array(zod.object({
+  "category": zod.string(),
+  "count": zod.number()
+}))
+})
+
+
+/**
  * @summary Request a presigned upload URL
  */
 export const RequestUploadUrlBody = zod.object({

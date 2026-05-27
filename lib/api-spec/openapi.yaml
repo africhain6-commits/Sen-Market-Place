@@ -516,6 +516,193 @@ paths:
         "404":
           description: Not found
 
+  /listings/{id}/renew:
+    post:
+      operationId: renewListing
+      tags: [listings]
+      summary: Renew a listing (reset to top of list)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Listing"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /favorites:
+    get:
+      operationId: getFavorites
+      tags: [favorites]
+      summary: Get current user's favorite listings
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Listing"
+        "401":
+          description: Unauthorized
+
+  /favorites/{listingId}:
+    post:
+      operationId: addFavorite
+      tags: [favorites]
+      summary: Add a listing to favorites
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+    delete:
+      operationId: removeFavorite
+      tags: [favorites]
+      summary: Remove a listing from favorites
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Post a review for a seller
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "401":
+          description: Unauthorized
+
+  /reviews/user/{id}:
+    get:
+      operationId: getUserReviews
+      tags: [reviews]
+      summary: Get reviews for a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get current user's notifications
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+        "401":
+          description: Unauthorized
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get global platform statistics
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+        "403":
+          description: Forbidden
+
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -808,6 +995,108 @@ components:
         - listingId
         - otherUser
         - unreadCount
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalListings:
+          type: integer
+        activeListings:
+          type: integer
+        pendingListings:
+          type: integer
+        rejectedListings:
+          type: integer
+        boostedListings:
+          type: integer
+        totalFavorites:
+          type: integer
+        totalReviews:
+          type: integer
+        listingsByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+            required: [category, count]
+      required:
+        - totalUsers
+        - totalListings
+        - activeListings
+        - pendingListings
+        - rejectedListings
+        - boostedListings
+        - totalFavorites
+        - totalReviews
+        - listingsByCategory
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        fromUserId:
+          type: integer
+        toUserId:
+          type: integer
+        rating:
+          type: integer
+        comment:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        fromUser:
+          $ref: "#/components/schemas/User"
+      required:
+        - id
+        - fromUserId
+        - toUserId
+        - rating
+        - createdAt
+
+    ReviewInput:
+      type: object
+      properties:
+        toUserId:
+          type: integer
+        rating:
+          type: integer
+        comment:
+          type: string
+      required:
+        - toUserId
+        - rating
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        isRead:
+          type: boolean
+        relatedId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - type
+        - message
+        - isRead
+        - createdAt
 
     RequestUploadUrlBody:
       type: object

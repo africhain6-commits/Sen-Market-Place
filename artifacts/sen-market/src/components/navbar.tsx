@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import {
+  useGetNotifications,
+  useMarkAllNotificationsRead,
+  getGetNotificationsQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 function SenegalFlag({ className = "" }: { className?: string }) {
   return (
@@ -27,6 +35,75 @@ function SenegalFlag({ className = "" }: { className?: string }) {
       </div>
       <div className="w-1/3 bg-[#E31B23]" />
     </div>
+  );
+}
+
+function NotificationBell({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const queryClient = useQueryClient();
+  const { data: notifications } = useGetNotifications({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetNotificationsQueryKey(),
+      refetchInterval: 30000,
+    },
+  });
+  const markAllRead = useMarkAllNotificationsRead({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
+      },
+    },
+  });
+
+  const unreadCount = notifications?.filter((n: any) => !n.isRead).length ?? 0;
+  const latest = notifications?.slice(0, 6) ?? [];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-[#D4AF37] text-[#0A2463] text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <div className="flex items-center justify-between px-3 py-2">
+          <DropdownMenuLabel className="p-0">Notifications</DropdownMenuLabel>
+          {unreadCount > 0 && (
+            <button
+              onClick={() => markAllRead.mutate()}
+              className="text-xs text-primary hover:underline"
+            >
+              Tout marquer lu
+            </button>
+          )}
+        </div>
+        <DropdownMenuSeparator />
+        {latest.length === 0 ? (
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Aucune notification
+          </div>
+        ) : (
+          latest.map((n: any) => (
+            <div
+              key={n.id}
+              className={`px-3 py-2.5 border-b last:border-b-0 ${!n.isRead ? "bg-primary/5" : ""}`}
+            >
+              <p className={`text-sm ${!n.isRead ? "font-medium" : "text-muted-foreground"}`}>
+                {n.message}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {formatDistanceToNow(new Date(n.createdAt), { locale: fr, addSuffix: true })}
+              </p>
+            </div>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -73,7 +150,6 @@ export function Navbar() {
             </Button>
           </Link>
 
-          {/* Bouton Admin visible pour les admins */}
           {isAuthenticated && user?.isAdmin && (
             <Link href="/admin">
               <Button size="sm" variant="outline" className="hidden sm:flex gap-2 border-red-400 text-red-400 hover:bg-red-400/10 hover:text-red-300 font-semibold">
@@ -81,6 +157,10 @@ export function Navbar() {
                 Admin
               </Button>
             </Link>
+          )}
+
+          {isAuthenticated && (
+            <NotificationBell isAuthenticated={isAuthenticated} />
           )}
 
           {isAuthenticated && user ? (

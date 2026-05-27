@@ -3,6 +3,7 @@ import { eq, and, or, desc, sql } from "drizzle-orm";
 import { db, messagesTable, usersTable, listingsTable } from "@workspace/db";
 import { SendMessageBody, GetConversationParams } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
+import { createNotification } from "./notifications";
 
 const router: IRouter = Router();
 
@@ -166,6 +167,16 @@ router.post("/messages", requireAuth, async (req, res): Promise<void> => {
     .returning();
 
   const [sender] = await db.select().from(usersTable).where(eq(usersTable.id, senderId));
+
+  const [listing] = await db.select().from(listingsTable).where(eq(listingsTable.id, listingId));
+  const senderName = sender?.name ?? "Quelqu'un";
+  const listingTitle = listing?.title ?? "une annonce";
+  await createNotification(
+    receiverId,
+    "message",
+    `${senderName} vous a envoyé un message concernant « ${listingTitle} »`,
+    listingId,
+  );
 
   res.status(201).json(formatMessage(msg, sender));
 });

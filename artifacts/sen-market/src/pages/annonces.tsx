@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetListings } from "@workspace/api-client-react";
+import {
+  useGetListings,
+  useGetFavorites,
+  useAddFavorite,
+  useRemoveFavorite,
+  getGetFavoritesQueryKey,
+} from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MapPin, Clock, Home as HomeIcon, Zap, ArrowUpDown } from "lucide-react";
+import { Search, MapPin, Clock, Home as HomeIcon, Zap, ArrowUpDown, Heart } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin"];
 const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
@@ -16,6 +24,8 @@ const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbou
 export default function Annonces() {
   const [location] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
@@ -25,6 +35,7 @@ export default function Annonces() {
 
   const [sortBy, setSortBy] = useState<"date" | "price">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
 
   const [activeFilters, setActiveFilters] = useState({
     search, category, city, minPrice, maxPrice
@@ -38,10 +49,33 @@ export default function Annonces() {
     maxPrice: activeFilters.maxPrice ? Number(activeFilters.maxPrice) : undefined,
     sortBy,
     sortOrder,
+    page,
+    limit: 20,
   });
+
+  const { data: favorites } = useGetFavorites({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetFavoritesQueryKey(),
+    }
+  });
+
+  const addFavorite = useAddFavorite({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetFavoritesQueryKey() }),
+    }
+  });
+  const removeFavorite = useRemoveFavorite({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetFavoritesQueryKey() }),
+    }
+  });
+
+  const favoritedIds = new Set((favorites ?? []).map((f: any) => f.id));
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1);
     setActiveFilters({
       search, category, city, minPrice, maxPrice
     });
@@ -166,7 +200,7 @@ export default function Annonces() {
               value={`${sortBy}-${sortOrder}`}
               onValueChange={(val) => {
                 const opt = SORT_OPTIONS.find(o => `${o.sortBy}-${o.sortOrder}` === val);
-                if (opt) { setSortBy(opt.sortBy); setSortOrder(opt.sortOrder); }
+                if (opt) { setSortBy(opt.sortBy); setSortOrder(opt.sortOrder); setPage(1); }
               }}
             >
               <SelectTrigger className="w-48 shrink-0">
@@ -217,50 +251,122 @@ export default function Annonces() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listingsPage?.listings.map(listing => (
-                <Link key={listing.id} href={`/annonces/${listing.id}`} data-testid={`link-listing-${listing.id}`}>
-                  <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col group">
-                    <div className="relative h-48 bg-muted overflow-hidden">
-                      {listing.photos && listing.photos.length > 0 ? (
-                        <img 
-                          src={listing.photos[0]} 
-                          alt={listing.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-secondary text-muted-foreground">
-                          <HomeIcon className="w-12 h-12 opacity-20" />
+              {listingsPage?.listings.map(listing => {
+                const isFav = favoritedIds.has(listing.id);
+                return (
+                  <div key={listing.id} className="relative group">
+                    <Link href={`/annonces/${listing.id}`} data-testid={`link-listing-${listing.id}`}>
+                      <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
+                        <div className="relative h-48 bg-muted overflow-hidden">
+                          {listing.photos && listing.photos.length > 0 ? (
+                            <img 
+                              src={listing.photos[0]} 
+                              alt={listing.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-secondary text-muted-foreground">
+                              <HomeIcon className="w-12 h-12 opacity-20" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium border">
+                            {listing.category}
+                          </div>
+                          {(listing as any).isBoosted && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#D4AF37] text-[#0A2463] px-2 py-1 rounded text-xs font-bold shadow">
+                              <Zap className="w-3 h-3" />
+                              VEDETTE
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium border">
-                        {listing.category}
-                      </div>
-                      {(listing as any).isBoosted && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#D4AF37] text-[#0A2463] px-2 py-1 rounded text-xs font-bold shadow">
-                          <Zap className="w-3 h-3" />
-                          VEDETTE
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-4 flex-1 flex flex-col">
-                      <div className="font-bold text-lg text-primary mb-2">
-                        {formatPrice(listing.price)}
-                      </div>
-                      <h3 className="font-medium text-foreground mb-1 line-clamp-2">{listing.title}</h3>
-                      <div className="flex flex-col gap-2 mt-auto pt-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          <span className="truncate">{listing.city}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true, locale: fr })}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                        <CardContent className="p-4 flex-1 flex flex-col">
+                          <div className="font-bold text-lg text-primary mb-2">
+                            {formatPrice(listing.price)}
+                          </div>
+                          <h3 className="font-medium text-foreground mb-1 line-clamp-2">{listing.title}</h3>
+                          <div className="flex flex-col gap-2 mt-auto pt-4 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{listing.city}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true, locale: fr })}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                    {isAuthenticated && (
+                      <button
+                        className={`absolute bottom-14 right-3 p-2 rounded-full shadow-md transition-all z-10 ${
+                          isFav
+                            ? "bg-white text-red-500"
+                            : "bg-white/80 text-muted-foreground hover:text-red-400"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (isFav) {
+                            removeFavorite.mutate({ listingId: listing.id });
+                          } else {
+                            addFavorite.mutate({ listingId: listing.id });
+                          }
+                        }}
+                        title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      >
+                        <Heart className={`w-4 h-4 ${isFav ? "fill-red-500" : ""}`} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {listingsPage && listingsPage.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page <= 1}
+              >
+                ← Précédent
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: listingsPage.totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === listingsPage.totalPages || Math.abs(p - page) <= 1)
+                  .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">…</span>
+                    ) : (
+                      <Button
+                        key={p}
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        className="w-9 h-9 p-0"
+                        onClick={() => setPage(p as number)}
+                      >
+                        {p}
+                      </Button>
+                    )
+                  )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.min(listingsPage.totalPages, p + 1))}
+                disabled={page >= listingsPage.totalPages}
+              >
+                Suivant →
+              </Button>
             </div>
           )}
         </div>

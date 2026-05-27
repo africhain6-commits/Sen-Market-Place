@@ -53,6 +53,30 @@ export default function AnnonceDetail() {
     }
   });
 
+  useEffect(() => {
+    if (!listing) return;
+    const prev = document.title;
+    document.title = `${listing.title} — SenMarket`;
+
+    const setMeta = (prop: string, content: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    const url = window.location.href;
+    const priceStr = listing.price ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(listing.price) : "Prix sur demande";
+    setMeta("og:title", `${listing.title} — ${priceStr}`);
+    setMeta("og:description", `${listing.city} · ${listing.category} · SenMarket`);
+    setMeta("og:url", url);
+    if (listing.photos && (listing.photos as string[]).length > 0) {
+      setMeta("og:image", (listing.photos as string[])[0]);
+    }
+    setMeta("og:type", "website");
+    setMeta("og:site_name", "SenMarket");
+
+    return () => { document.title = prev; };
+  }, [listing]);
+
   const handleSendMessage = () => {
     if (!message.trim() || !listing?.userId) return;
     sendMessageMutation.mutate({

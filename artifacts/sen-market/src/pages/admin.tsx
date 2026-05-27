@@ -7,8 +7,10 @@ import {
   useAdminRejectListing,
   useAdminGetUsers,
   useAdminBanUser,
+  useGetAdminStats,
   getAdminGetListingsQueryKey,
   getAdminGetUsersQueryKey,
+  getGetAdminStatsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -17,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap, Shield } from "lucide-react";
+import { CheckCircle, XCircle, User, Package, Clock, AlertTriangle, Zap, Shield, BarChart3, Heart, Star, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -140,6 +142,10 @@ export default function Admin() {
     query: { queryKey: getAdminGetUsersQueryKey() },
   });
 
+  const { data: stats, isLoading: isLoadingStats } = useGetAdminStats({
+    query: { queryKey: getGetAdminStatsQueryKey() },
+  });
+
   const approveMutation = useAdminApproveListing({
     mutation: {
       onSuccess: () => {
@@ -203,6 +209,10 @@ export default function Admin() {
           <TabsTrigger value="users" data-testid="tab-admin-users">
             <User className="w-4 h-4 mr-2" />
             Utilisateurs
+          </TabsTrigger>
+          <TabsTrigger value="stats" data-testid="tab-admin-stats">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Statistiques
           </TabsTrigger>
         </TabsList>
 
@@ -354,6 +364,77 @@ export default function Admin() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <div className="space-y-6">
+            {isLoadingStats ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-28 w-full" />)}
+              </div>
+            ) : stats ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Utilisateurs", value: stats.totalUsers, icon: User, color: "text-blue-600" },
+                    { label: "Annonces totales", value: stats.totalListings, icon: Package, color: "text-slate-600" },
+                    { label: "Annonces actives", value: stats.activeListings, icon: TrendingUp, color: "text-emerald-600" },
+                    { label: "En attente", value: stats.pendingListings, icon: Clock, color: "text-amber-600" },
+                    { label: "Refusées", value: stats.rejectedListings, icon: XCircle, color: "text-red-500" },
+                    { label: "Boostées", value: stats.boostedListings, icon: Zap, color: "text-[#D4AF37]" },
+                    { label: "Favoris", value: stats.totalFavorites, icon: Heart, color: "text-rose-500" },
+                    { label: "Avis", value: stats.totalReviews, icon: Star, color: "text-purple-500" },
+                  ].map(({ label, value, icon: Icon, color }) => (
+                    <Card key={label}>
+                      <CardContent className="p-5 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">{label}</span>
+                          <Icon className={`w-5 h-5 ${color}`} />
+                        </div>
+                        <span className="text-3xl font-bold">{value}</span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {stats.listingsByCategory && stats.listingsByCategory.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Annonces par catégorie (actives)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {stats.listingsByCategory.map((cat: any) => {
+                          const pct = stats.activeListings > 0
+                            ? Math.round((cat.count / stats.activeListings) * 100)
+                            : 0;
+                          return (
+                            <div key={cat.category}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-sm font-medium">{cat.category}</span>
+                                <span className="text-sm text-muted-foreground">{cat.count} ({pct}%)</span>
+                              </div>
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p>Impossible de charger les statistiques.</p>
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="users">
