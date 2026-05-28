@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Shield, Menu, X, LayoutDashboard, Bell, MapPin, GitCompare, Building2 } from "lucide-react";
+import { PlusCircle, LogOut, Shield, Bell, MapPin, GitCompare, Building2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
 import {
   useGetNotifications,
   useMarkAllNotificationsRead,
@@ -109,7 +108,6 @@ function NotificationBell({ isAuthenticated }: { isAuthenticated: boolean }) {
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-primary shadow-md">
@@ -153,18 +151,15 @@ export function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-3">
           <Link href="/publier" data-testid="link-publish">
-            <Button size="sm" className="hidden sm:flex gap-2 font-semibold bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
+            <Button size="sm" className="gap-2 font-semibold bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
               <PlusCircle className="h-4 w-4" />
-              Publier
-            </Button>
-            <Button size="icon" className="sm:hidden bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
-              <PlusCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Publier</span>
             </Button>
           </Link>
 
           {isAuthenticated && user?.isAdmin && (
             <Link href="/admin">
-              <Button size="sm" variant="outline" className="hidden sm:flex gap-2 border-red-400 text-red-400 hover:bg-red-400/10 hover:text-red-300 font-semibold">
+              <Button size="sm" variant="outline" className="hidden md:flex gap-2 border-red-400 text-red-400 hover:bg-red-400/10 hover:text-red-300 font-semibold">
                 <Shield className="h-4 w-4" />
                 Admin
               </Button>
@@ -226,83 +221,13 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <Link href="/connexion" data-testid="link-login">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white hidden sm:flex">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white hidden md:flex">
                 Connexion
               </Button>
             </Link>
           )}
-
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden text-white hover:bg-white/10"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-primary border-t border-white/10 px-4 py-3 flex flex-col gap-2">
-          <Link href="/" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
-            Accueil
-          </Link>
-          <Link href="/annonces" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
-            Toutes les annonces
-          </Link>
-          <Link href="/boutiques" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
-            Boutiques &amp; Couturiers
-          </Link>
-          <Link href="/carte" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <MapPin className="w-4 h-4" />
-            Carte des annonces
-          </Link>
-          <Link href="/quartiers" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <Building2 className="w-4 h-4" />
-            Quartiers de Dakar
-          </Link>
-          <Link href="/comparer" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <GitCompare className="w-4 h-4" />
-            Comparer des annonces
-          </Link>
-          <Link href="/publicite" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10" onClick={() => setMobileOpen(false)}>
-            Publicité
-          </Link>
-          {isAuthenticated && user && (
-            <>
-              <Link href="/tableau-de-bord" className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-                <LayoutDashboard className="w-4 h-4" />
-                Tableau de bord
-              </Link>
-              <Link href={`/profil/${user.id}`} className="text-sm font-medium text-white/85 hover:text-white py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-                Mon profil
-              </Link>
-            </>
-          )}
-          {isAuthenticated && user?.isAdmin && (
-            <Link href="/admin" className="text-sm font-bold text-red-400 hover:text-red-300 py-2 border-b border-white/10 flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-              <Shield className="w-4 h-4" />
-              Administration
-            </Link>
-          )}
-          {isAuthenticated && user && (
-            <button
-              onClick={() => { logout(); setMobileOpen(false); }}
-              className="text-sm font-medium text-white/60 hover:text-white py-2 text-left border-b border-white/10"
-            >
-              Déconnexion
-            </button>
-          )}
-          {!isAuthenticated && (
-            <Link href="/connexion" className="text-sm font-medium text-white/85 hover:text-white py-2" onClick={() => setMobileOpen(false)}>
-              Connexion
-            </Link>
-          )}
-        </div>
-      )}
     </header>
   );
 }

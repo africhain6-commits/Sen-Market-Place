@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import { AuthProvider } from "@/hooks/use-auth";
+import { PwaInstallProvider } from "@/hooks/use-pwa-install";
 
 import Home from "@/pages/home";
 import Annonces from "@/pages/annonces";
@@ -61,10 +62,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <AuthProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-          </TooltipProvider>
+          <PwaInstallProvider>
+            <TooltipProvider>
+              <Router />
+              <Toaster />
+            </TooltipProvider>
+          </PwaInstallProvider>
         </AuthProvider>
       </WouterRouter>
     </QueryClientProvider>

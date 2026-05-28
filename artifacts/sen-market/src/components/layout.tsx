@@ -2,14 +2,14 @@ import { ReactNode } from "react";
 import { Navbar } from "./navbar";
 import { Link } from "wouter";
 import { ScrollToTop } from "./scroll-to-top";
-import { PwaPrompt } from "./pwa-prompt";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
       <ScrollToTop />
-      <PwaPrompt />
+      <MobileBottomNav />
       <main className="flex-1 w-full">
         {children}
       </main>
