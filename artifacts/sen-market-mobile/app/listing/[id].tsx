@@ -110,16 +110,16 @@ export default function ListingDetailScreen() {
       >
         {/* Images */}
         <View style={styles.imageContainer}>
-          {listing.images.length > 0 ? (
+          {(listing.images ?? []).length > 0 ? (
             <>
               <Image
                 source={{ uri: listing.images[currentImage] }}
                 style={styles.mainImage}
                 resizeMode="cover"
               />
-              {listing.images.length > 1 && (
+              {(listing.images ?? []).length > 1 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnails} contentContainerStyle={{ gap: 8, padding: 8 }}>
-                  {listing.images.map((img, i) => (
+                  {(listing.images ?? []).map((img, i) => (
                     <TouchableOpacity key={i} onPress={() => setCurrentImage(i)}>
                       <Image
                         source={{ uri: img }}
