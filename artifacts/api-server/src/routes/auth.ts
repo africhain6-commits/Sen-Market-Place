@@ -35,10 +35,18 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   req.session.userId = user.id;
 
+  const token = await new Promise<string>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) return reject(err);
+      resolve(req.sessionID);
+    });
+  });
+
   const { passwordHash: _ph, ...safeUser } = user;
 
   res.status(201).json({
     user: { ...safeUser, createdAt: safeUser.createdAt.toISOString() },
+    token,
     message: "Compte créé avec succès",
   });
 });
@@ -70,10 +78,18 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 
   req.session.userId = user.id;
 
+  const token = await new Promise<string>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) return reject(err);
+      resolve(req.sessionID);
+    });
+  });
+
   const { passwordHash: _ph, ...safeUser } = user;
 
   res.json({
     user: { ...safeUser, createdAt: safeUser.createdAt.toISOString() },
+    token,
     message: "Connexion réussie",
   });
 });
