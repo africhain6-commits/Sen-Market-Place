@@ -1,5 +1,10 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "OFR_heaiVgU28NyYUjab5"
+uri = "file://artifacts/sen-market-mobile/assets/images/icon.png"
+type = "image"
+title = "generated_image"
 
 [[outputs]]
 id = "cQEqAIs_EODDqPUG96XRV"
