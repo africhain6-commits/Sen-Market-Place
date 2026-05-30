@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CategoryPill, CATEGORIES } from "@/components/CategoryPill";
+import { CATEGORIES } from "@/components/CategoryPill";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/hooks/useApi";
@@ -63,10 +63,19 @@ export default function AnnoncesScreen() {
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 84 + 34 : 100;
 
+  const activeCat = CATEGORIES.find(c => c.id === activeCategory);
+  const categoryLabel = activeCat && activeCategory !== "all"
+    ? `${activeCat.icon}  ${activeCat.label}`
+    : "Toutes les annonces";
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary, paddingTop: topPadding + 12 }]}>
+      {/* Header — orange/or */}
+      <View style={[styles.header, { backgroundColor: colors.accent, paddingTop: topPadding + 10 }]}>
+        {/* Titre catégorie */}
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>{categoryLabel}</Text>
+
+        {/* Barre de recherche */}
         <View style={[styles.searchBar, { backgroundColor: "#fff" }]}>
           <Feather name="search" size={18} color={colors.mutedForeground} />
           <TextInput
@@ -84,34 +93,57 @@ export default function AnnoncesScreen() {
           )}
         </View>
 
-        {/* Categories */}
+        {/* Filtres catégories */}
         <FlatList
           data={CATEGORIES}
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categories}
-          renderItem={({ item }) => (
-            <CategoryPill
-              label={item.label}
-              icon={item.icon}
-              isActive={activeCategory === item.id}
-              onPress={() => { setActiveCategory(item.id); setPage(1); }}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isActive = activeCategory === item.id;
+            return (
+              <TouchableOpacity
+                onPress={() => { setActiveCategory(item.id); setPage(1); }}
+                activeOpacity={0.7}
+                style={[
+                  styles.pill,
+                  {
+                    backgroundColor: isActive ? colors.primary : "rgba(255,255,255,0.85)",
+                    borderColor: isActive ? colors.primary : "rgba(255,255,255,0.5)",
+                  },
+                ]}
+              >
+                {item.icon ? <Text style={styles.pillIcon}>{item.icon}</Text> : null}
+                <Text style={[styles.pillLabel, { color: isActive ? "#fff" : colors.primary }]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
 
-      {/* Results */}
+      {/* Résultats */}
       {isLoading && !refreshing ? (
         <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : (data?.listings ?? []).length === 0 ? (
         <View style={styles.emptyState}>
-          <Feather name="search" size={48} color={colors.mutedForeground} />
+          <Text style={styles.emptyIcon}>🔍</Text>
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Aucune annonce trouvée</Text>
-          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Essayez d'autres mots-clés ou catégories</Text>
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            Essayez d'autres mots-clés ou catégories
+          </Text>
+          {activeCategory !== "all" && (
+            <TouchableOpacity
+              onPress={() => { setActiveCategory("all"); setPage(1); }}
+              style={[styles.resetBtn, { backgroundColor: colors.accent }]}
+            >
+              <Text style={[styles.resetBtnText, { color: colors.primary }]}>Voir toutes les annonces</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
@@ -121,7 +153,16 @@ export default function AnnoncesScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={{ padding: 12, paddingBottom: bottomPadding }}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          }
+          ListHeaderComponent={
+            data ? (
+              <Text style={[styles.resultsCount, { color: colors.mutedForeground }]}>
+                {data.total} annonce{data.total > 1 ? "s" : ""}
+              </Text>
+            ) : null
+          }
           renderItem={({ item }) => (
             <View style={styles.cardWrapper}>
               <ListingCard
@@ -134,9 +175,9 @@ export default function AnnoncesScreen() {
             data && data.page < data.totalPages ? (
               <TouchableOpacity
                 onPress={() => setPage(p => p + 1)}
-                style={[styles.loadMore, { backgroundColor: colors.primary }]}
+                style={[styles.loadMore, { backgroundColor: colors.accent }]}
               >
-                <Text style={[styles.loadMoreText, { color: colors.primaryForeground }]}>Charger plus</Text>
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>Charger plus</Text>
               </TouchableOpacity>
             ) : null
           }
@@ -148,7 +189,12 @@ export default function AnnoncesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingBottom: 12 },
+  header: { paddingHorizontal: 16, paddingBottom: 14 },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: "Inter_700Bold",
+    marginBottom: 12,
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -160,10 +206,26 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
   categories: { paddingBottom: 4, gap: 0 },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  pillIcon: { fontSize: 13 },
+  pillLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   loadingCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 40 },
+  emptyIcon: { fontSize: 48 },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+  resetBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, marginTop: 4 },
+  resetBtnText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  resultsCount: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 8, marginLeft: 2 },
   row: { gap: 10, marginBottom: 10 },
   cardWrapper: { flex: 1 },
   loadMore: {
