@@ -2,9 +2,11 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { pool } from "@workspace/db";
 
 const app: Express = express();
 
@@ -36,9 +38,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const sessionSecret = process.env.SESSION_SECRET ?? "sen-market-secret-key";
+const PgStore = connectPgSimple(session);
 
 app.use(
   session({
+    store: new PgStore({
+      pool,
+      createTableIfMissing: true,
+    }),
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,

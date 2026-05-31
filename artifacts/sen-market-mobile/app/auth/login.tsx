@@ -109,6 +109,13 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.forgotBtn}
+          onPress={() => router.push("/auth/forgot-password")}
+        >
+          <Text style={[styles.forgotText, { color: colors.mutedForeground }]}>Mot de passe oublié ?</Text>
+        </TouchableOpacity>
+
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.mutedForeground }]}>Pas encore de compte ? </Text>
           <TouchableOpacity onPress={() => router.replace("/auth/register")}>
@@ -166,6 +173,8 @@ const styles = StyleSheet.create({
   pwdInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: "Inter_400Regular" },
   btn: { padding: 16, borderRadius: 12, alignItems: "center", marginBottom: 16 },
   btnText: { fontSize: 16, fontFamily: "Inter_700Bold" },
+  forgotBtn: { alignItems: "center", marginBottom: 20, marginTop: -8 },
+  forgotText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   footer: { flexDirection: "row", justifyContent: "center" },
   footerText: { fontSize: 15, fontFamily: "Inter_400Regular" },
   footerLink: { fontSize: 15, fontFamily: "Inter_700Bold" },

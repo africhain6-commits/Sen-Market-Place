@@ -92,8 +92,9 @@ export default function TableauDeBord() {
     mutation: {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: getGetMyListingsQueryKey() });
-        const isPausing = variables.data.status === "inactive";
-        toast({ title: isPausing ? "Annonce mise en pause" : "Annonce réactivée" });
+        const status = variables.data.status;
+        const msg = status === "inactive" ? "Annonce mise en pause" : status === "sold" ? "Annonce marquée comme vendue ✓" : "Annonce réactivée";
+        toast({ title: msg });
       },
       onError: () => toast({ title: "Erreur", description: "Impossible de modifier le statut.", variant: "destructive" }),
     },
@@ -272,8 +273,8 @@ export default function TableauDeBord() {
                               <Zap className="w-3 h-3" /> VEDETTE
                             </Badge>
                           )}
-                          <Badge variant={listing.status === 'active' ? "default" : "secondary"}>
-                            {listing.status === 'active' ? "En ligne" : listing.status === 'pending' ? "En attente" : "Inactif"}
+                            <Badge variant={listing.status === 'active' ? "default" : listing.status === 'sold' ? "secondary" : "secondary"} className={listing.status === 'sold' ? "bg-green-100 text-green-700 border-green-200" : ""}>
+                            {listing.status === 'active' ? "En ligne" : listing.status === 'pending' ? "En attente" : listing.status === 'sold' ? "Vendu" : "Inactif"}
                           </Badge>
                         </div>
                         <Link href={`/modifier/${listing.id}`}>
@@ -294,25 +295,41 @@ export default function TableauDeBord() {
                             Renouveler
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1 text-xs h-7"
-                          disabled={statusMutation.isPending}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            statusMutation.mutate({
-                              id: listing.id,
-                              data: { status: listing.status === "active" ? "inactive" : "active" },
-                            });
-                          }}
-                        >
-                          {listing.status === "active" ? (
-                            <><Pause className="w-3 h-3" /> Pause</>
-                          ) : (
-                            <><Play className="w-3 h-3" /> Activer</>
-                          )}
-                        </Button>
+                        {listing.status !== "sold" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-xs h-7"
+                            disabled={statusMutation.isPending}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              statusMutation.mutate({
+                                id: listing.id,
+                                data: { status: listing.status === "active" ? "inactive" : "active" },
+                              });
+                            }}
+                          >
+                            {listing.status === "active" ? (
+                              <><Pause className="w-3 h-3" /> Pause</>
+                            ) : (
+                              <><Play className="w-3 h-3" /> Activer</>
+                            )}
+                          </Button>
+                        )}
+                        {listing.status === "active" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-xs h-7 border-green-500 text-green-600 hover:bg-green-50"
+                            disabled={statusMutation.isPending}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              statusMutation.mutate({ id: listing.id, data: { status: "sold" } });
+                            }}
+                          >
+                            <TrendingUp className="w-3 h-3" /> Vendu
+                          </Button>
+                        )}
                         {!(listing as any).isBoosted && listing.status === 'active' && (
                           <Button
                             size="sm"
@@ -616,6 +633,48 @@ export default function TableauDeBord() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Zone dangereuse */}
+      <div className="mt-12 border border-red-200 rounded-lg p-6 bg-red-50/50">
+        <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide mb-1">Zone dangereuse</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          La suppression de votre compte est irréversible. Toutes vos annonces, messages et données seront définitivement supprimés.
+        </p>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 gap-2">
+              <Trash2 className="w-4 h-4" />
+              Supprimer mon compte
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer définitivement votre compte ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Toutes vos annonces, messages, favoris et données personnelles seront supprimés immédiatement. Vous serez déconnecté.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={async () => {
+                  try {
+                    await fetch("/api/auth/account", { method: "DELETE", credentials: "include" });
+                    queryClient.clear();
+                    window.location.href = "/";
+                  } catch {
+                    toast({ title: "Erreur", description: "Impossible de supprimer le compte.", variant: "destructive" });
+                  }
+                }}
+              >
+                Supprimer définitivement
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
     </div>
     </>
   );

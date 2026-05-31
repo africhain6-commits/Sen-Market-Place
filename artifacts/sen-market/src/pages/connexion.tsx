@@ -96,7 +96,10 @@ export default function Connexion() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t p-4 mt-4">
+        <CardFooter className="flex flex-col items-center gap-3 border-t p-4 mt-4">
+          <Link href="/mot-de-passe-oublie" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            Mot de passe oublié ?
+          </Link>
           <p className="text-sm text-muted-foreground">
             Pas encore de compte ?{" "}
             <Link href="/inscription" className="text-primary hover:underline font-medium" data-testid="link-register">

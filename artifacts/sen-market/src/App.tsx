@@ -22,6 +22,8 @@ import Modifier from "@/pages/modifier";
 import Carte from "@/pages/carte";
 import Quartiers from "@/pages/quartiers";
 import Comparer from "@/pages/comparer";
+import Confidentialite from "@/pages/confidentialite";
+import MotDePasseOublie from "@/pages/mot-de-passe-oublie";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +53,8 @@ function Router() {
         <Route path="/carte" component={Carte} />
         <Route path="/quartiers" component={Quartiers} />
         <Route path="/comparer" component={Comparer} />
+        <Route path="/confidentialite" component={Confidentialite} />
+        <Route path="/mot-de-passe-oublie" component={MotDePasseOublie} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

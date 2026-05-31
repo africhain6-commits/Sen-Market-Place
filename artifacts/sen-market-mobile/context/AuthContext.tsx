@@ -8,6 +8,7 @@ interface User {
   email: string;
   phone?: string | null;
   whatsapp?: string | null;
+  city?: string | null;
   avatarUrl?: string | null;
   isAdmin: boolean;
   createdAt: string;
@@ -21,6 +22,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,6 +34,8 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: async () => {},
+  refreshUser: async () => {},
+  deleteAccount: async () => {},
 });
 
 const API_BASE = process.env.EXPO_PUBLIC_DOMAIN
@@ -109,8 +114,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
   };
 
+  const refreshUser = async () => {
+    try {
+      const me = await apiFetch("/api/auth/me");
+      setUser(me);
+    } catch {}
+  };
+
+  const deleteAccount = async () => {
+    await apiFetch("/api/auth/account", { method: "DELETE" });
+    await AsyncStorage.removeItem("auth_token");
+    setToken(null);
+    setUser(null);
+    queryClient.clear();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated: !!user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated: !!user, login, register, logout, refreshUser, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

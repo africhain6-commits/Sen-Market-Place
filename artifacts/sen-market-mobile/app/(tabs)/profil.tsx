@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -16,22 +15,31 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { useColors } from "@/hooks/useColors";
-import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/hooks/useApi";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, deleteAccount } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: myListings, isLoading, refetch } = useQuery<Listing[]>({
     queryKey: ["my-listings"],
     queryFn: () => apiFetch("/api/listings/user/mine"),
     enabled: isAuthenticated,
+  });
+
+  const markSoldMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiFetch(`/api/listings/${id}`, { method: "PATCH", body: JSON.stringify({ status: "sold" }) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-listings"] });
+    },
   });
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
@@ -47,6 +55,45 @@ export default function ProfilScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Supprimer mon compte",
+      "Cette action est irréversible. Toutes vos annonces et messages seront supprimés définitivement.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer définitivement",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              await deleteAccount();
+            } catch (e: any) {
+              Alert.alert("Erreur", e.message);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleMarkSold = (listing: Listing) => {
+    Alert.alert(
+      "Marquer comme vendu",
+      `Voulez-vous marquer "${listing.title}" comme vendu ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Vendu ✓",
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            markSoldMutation.mutate(listing.id);
+          },
+        },
+      ],
+    );
   };
 
   if (!isAuthenticated) {
@@ -125,6 +172,20 @@ export default function ProfilScreen() {
       >
         {/* Info card */}
         <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={styles.infoCardRow}
+            onPress={() => router.push("/profil/edit")}
+          >
+            <Feather name="edit-2" size={16} color={colors.primary} />
+            <View style={styles.infoCardContent}>
+              <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Modifier mon profil</Text>
+              <Text style={[styles.infoCardValue, { color: colors.foreground }]}>Nom, téléphone, WhatsApp, ville</Text>
+            </View>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <View style={[styles.infoCardDivider, { backgroundColor: colors.border }]} />
+
           <View style={styles.infoCardRow}>
             <Feather name="mail" size={16} color={colors.primary} />
             <View style={styles.infoCardContent}>
@@ -132,45 +193,19 @@ export default function ProfilScreen() {
               <Text style={[styles.infoCardValue, { color: colors.foreground }]}>{user?.email}</Text>
             </View>
           </View>
-          {user?.phone ? (
-            <TouchableOpacity style={styles.infoCardRow} onPress={() => Linking.openURL(`tel:${user.phone}`)}>
-              <Feather name="phone" size={16} color={colors.primary} />
-              <View style={styles.infoCardContent}>
-                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Téléphone</Text>
-                <Text style={[styles.infoCardValue, { color: colors.primary }]}>{user.phone}</Text>
+
+          {user?.city ? (
+            <>
+              <View style={[styles.infoCardDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.infoCardRow}>
+                <Feather name="map-pin" size={16} color={colors.primary} />
+                <View style={styles.infoCardContent}>
+                  <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Ville</Text>
+                  <Text style={[styles.infoCardValue, { color: colors.foreground }]}>{user.city}</Text>
+                </View>
               </View>
-              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.infoCardRow}>
-              <Feather name="phone" size={16} color={colors.mutedForeground} />
-              <View style={styles.infoCardContent}>
-                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Téléphone</Text>
-                <Text style={[styles.infoCardValue, { color: colors.mutedForeground }]}>Non renseigné</Text>
-              </View>
-            </View>
-          )}
-          {user?.whatsapp ? (
-            <TouchableOpacity
-              style={styles.infoCardRow}
-              onPress={() => Linking.openURL(`https://wa.me/${user.whatsapp!.replace(/\D/g, "")}`)}
-            >
-              <Feather name="message-circle" size={16} color="#25D366" />
-              <View style={styles.infoCardContent}>
-                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>WhatsApp</Text>
-                <Text style={[styles.infoCardValue, { color: "#25D366" }]}>{user.whatsapp}</Text>
-              </View>
-              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.infoCardRow}>
-              <Feather name="message-circle" size={16} color={colors.mutedForeground} />
-              <View style={styles.infoCardContent}>
-                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>WhatsApp</Text>
-                <Text style={[styles.infoCardValue, { color: colors.mutedForeground }]}>Non renseigné</Text>
-              </View>
-            </View>
-          )}
+            </>
+          ) : null}
         </View>
 
         {/* Stats */}
@@ -188,10 +223,10 @@ export default function ProfilScreen() {
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.stat}>
-            <Text style={[styles.statNum, { color: colors.accent }]}>
-              {myListings?.filter(l => l.status === "pending").length ?? 0}
+            <Text style={[styles.statNum, { color: "#22c55e" }]}>
+              {myListings?.filter(l => l.status === "sold").length ?? 0}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>En attente</Text>
+            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Vendues</Text>
           </View>
         </View>
 
@@ -203,6 +238,13 @@ export default function ProfilScreen() {
           >
             <Feather name="plus-circle" size={20} color={colors.accentForeground} />
             <Text style={[styles.actionText, { color: colors.accentForeground }]}>Publier une annonce</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/favoris")}
+            style={[styles.actionBtn, { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border }]}
+          >
+            <Feather name="heart" size={20} color="#EF4444" />
+            <Text style={[styles.actionText, { color: colors.foreground }]}>Mes favoris</Text>
           </TouchableOpacity>
         </View>
 
@@ -235,6 +277,21 @@ export default function ProfilScreen() {
                       <Feather name="edit-2" size={13} color="#fff" />
                       <Text style={styles.listingActionText}>Modifier</Text>
                     </TouchableOpacity>
+                    {listing.status !== "sold" && (
+                      <TouchableOpacity
+                        style={[styles.listingActionBtn, { backgroundColor: "#22c55e" }]}
+                        onPress={() => handleMarkSold(listing)}
+                      >
+                        <Feather name="check-circle" size={13} color="#fff" />
+                        <Text style={styles.listingActionText}>Vendu</Text>
+                      </TouchableOpacity>
+                    )}
+                    {listing.status === "sold" && (
+                      <View style={[styles.listingActionBtn, { backgroundColor: "#6b7280" }]}>
+                        <Feather name="check-circle" size={13} color="#fff" />
+                        <Text style={styles.listingActionText}>Vendu</Text>
+                      </View>
+                    )}
                     <TouchableOpacity
                       style={[styles.listingActionBtn, { backgroundColor: "#EF4444" }]}
                       onPress={() => {
@@ -262,6 +319,23 @@ export default function ProfilScreen() {
             </View>
           )}
         </View>
+
+        {/* Danger zone */}
+        <View style={[styles.section, styles.dangerSection]}>
+          <Text style={[styles.dangerTitle, { color: colors.mutedForeground }]}>Zone dangereuse</Text>
+          <TouchableOpacity
+            style={[styles.dangerBtn, { borderColor: "#EF4444" }]}
+            onPress={handleDeleteAccount}
+            activeOpacity={0.7}
+          >
+            <Feather name="trash-2" size={16} color="#EF4444" />
+            <Text style={styles.dangerBtnText}>Supprimer mon compte</Text>
+          </TouchableOpacity>
+          <Text style={[styles.dangerNote, { color: colors.mutedForeground }]}>
+            Cette action est irréversible et supprime toutes vos données.
+          </Text>
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -291,9 +365,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
   },
+  infoCardDivider: { height: StyleSheet.hairlineWidth, marginHorizontal: 16 },
   infoCardContent: { flex: 1 },
   infoCardLabel: { fontSize: 11, fontFamily: "Inter_400Regular", marginBottom: 2 },
   infoCardValue: { fontSize: 14, fontFamily: "Inter_500Medium" },
@@ -319,12 +392,13 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 14,
     borderRadius: 12,
+    marginBottom: 10,
   },
   actionText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   emptyState: { alignItems: "center", gap: 8, paddingVertical: 30 },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
   listingsList: { gap: 4 },
-  listingActions: { flexDirection: "row", gap: 8, marginBottom: 10, marginTop: -4 },
+  listingActions: { flexDirection: "row", gap: 8, marginBottom: 10, marginTop: -4, flexWrap: "wrap" },
   listingActionBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
   listingActionText: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
   authPrompt: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
@@ -332,4 +406,16 @@ const styles = StyleSheet.create({
   authText: { fontSize: 15, fontFamily: "Inter_400Regular", textAlign: "center" },
   btn: { width: "100%", padding: 14, borderRadius: 12, alignItems: "center" },
   btnText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
+  dangerSection: { marginTop: 8 },
+  dangerTitle: { fontSize: 11, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 },
+  dangerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  dangerBtnText: { color: "#EF4444", fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  dangerNote: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 8 },
 });

@@ -1,0 +1,2 @@
+- [Session persistance PostgreSQL](pg-sessions.md) — sessions migrated to connect-pg-simple; use pool from @workspace/db with createTableIfMissing.
+- [Password reset flow](password-reset.md) — token stored in password_reset_tokens table; token returned in response for dev (no email service configured yet).

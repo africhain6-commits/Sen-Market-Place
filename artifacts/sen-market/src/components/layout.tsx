@@ -39,6 +39,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <li><a href="tel:+221773579701" className="hover:text-primary transition-colors">+221 77 357 97 01</a></li>
                 <li><a href="https://wa.me/221773579701" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp : +221 77 357 97 01</a></li>
                 <li className="text-muted-foreground">Ngor Almadies, Dakar, Sénégal</li>
+                <li><Link href="/confidentialite" className="hover:text-primary transition-colors">Politique de confidentialité</Link></li>
               </ul>
             </div>
           </div>
