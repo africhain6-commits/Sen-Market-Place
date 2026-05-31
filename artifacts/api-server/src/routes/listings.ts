@@ -276,21 +276,50 @@ router.get("/listings/:id/similar", async (req, res): Promise<void> => {
   const [listing] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
   if (!listing) { res.status(404).json({ error: "Annonce introuvable" }); return; }
 
-  const rows = await db
+  const baseWhere = and(eq(listingsTable.status, "active"), ne(listingsTable.id, id));
+
+  // 1. Same category
+  const byCat = await db
     .select({ listing: listingsTable, user: usersTable })
     .from(listingsTable)
     .leftJoin(usersTable, eq(listingsTable.userId, usersTable.id))
-    .where(
-      and(
-        eq(listingsTable.category, listing.category),
-        eq(listingsTable.status, "active"),
-        ne(listingsTable.id, id),
-      ),
-    )
+    .where(and(baseWhere, eq(listingsTable.category, listing.category)))
     .orderBy(desc(listingsTable.createdAt))
     .limit(6);
 
-  res.json(rows.map(({ listing: l, user }) => formatListing(l, user ?? undefined)));
+  if (byCat.length >= 3) {
+    res.json(byCat.map(({ listing: l, user }) => formatListing(l, user ?? undefined)));
+    return;
+  }
+
+  // 2. Same city (fill remaining slots)
+  const seenIds = new Set(byCat.map((r) => r.listing.id));
+  const byCity = await db
+    .select({ listing: listingsTable, user: usersTable })
+    .from(listingsTable)
+    .leftJoin(usersTable, eq(listingsTable.userId, usersTable.id))
+    .where(and(baseWhere, eq(listingsTable.city, listing.city)))
+    .orderBy(desc(listingsTable.createdAt))
+    .limit(6);
+
+  const combined = [...byCat, ...byCity.filter((r) => !seenIds.has(r.listing.id))];
+  if (combined.length >= 3) {
+    res.json(combined.slice(0, 6).map(({ listing: l, user }) => formatListing(l, user ?? undefined)));
+    return;
+  }
+
+  // 3. Fallback: latest active listings
+  const seenIds2 = new Set(combined.map((r) => r.listing.id));
+  const latest = await db
+    .select({ listing: listingsTable, user: usersTable })
+    .from(listingsTable)
+    .leftJoin(usersTable, eq(listingsTable.userId, usersTable.id))
+    .where(baseWhere)
+    .orderBy(desc(listingsTable.createdAt))
+    .limit(9);
+
+  const final = [...combined, ...latest.filter((r) => !seenIds2.has(r.listing.id))];
+  res.json(final.slice(0, 6).map(({ listing: l, user }) => formatListing(l, user ?? undefined)));
 });
 
 router.post("/listings/:id/track", async (req, res): Promise<void> => {

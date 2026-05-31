@@ -473,9 +473,9 @@ export default function AnnonceDetail() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {listing.user.whatsapp && !isOwner && (
+                  {(listing.user.whatsapp || listing.user.phone) && !isOwner && (
                     <a
-                      href={`https://wa.me/${listing.user.whatsapp.replace(/\D/g, "")}`}
+                      href={`https://wa.me/${(listing.user.whatsapp || listing.user.phone)!.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full"
@@ -484,7 +484,7 @@ export default function AnnonceDetail() {
                     >
                       <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
                         <MessageCircle className="w-4 h-4" />
-                        Contacter sur WhatsApp
+                        WhatsApp {listing.user.whatsapp || listing.user.phone}
                       </Button>
                     </a>
                   )}
