@@ -20,6 +20,7 @@ import { ListingCard, Listing } from "@/components/ListingCard";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/hooks/useApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfilScreen() {
   const colors = useColors();
@@ -220,12 +221,43 @@ export default function ProfilScreen() {
           ) : (
             <View style={styles.listingsList}>
               {myListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  horizontal
-                  onPress={() => router.push(`/listing/${listing.id}`)}
-                />
+                <View key={listing.id}>
+                  <ListingCard
+                    listing={listing}
+                    horizontal
+                    onPress={() => router.push(`/listing/${listing.id}`)}
+                  />
+                  <View style={styles.listingActions}>
+                    <TouchableOpacity
+                      style={[styles.listingActionBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => router.push(`/listing/edit/${listing.id}`)}
+                    >
+                      <Feather name="edit-2" size={13} color="#fff" />
+                      <Text style={styles.listingActionText}>Modifier</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.listingActionBtn, { backgroundColor: "#EF4444" }]}
+                      onPress={() => {
+                        Alert.alert("Supprimer", "Êtes-vous sûr de vouloir supprimer cette annonce ?", [
+                          { text: "Annuler", style: "cancel" },
+                          {
+                            text: "Supprimer", style: "destructive", onPress: async () => {
+                              try {
+                                await apiFetch(`/api/listings/${listing.id}`, { method: "DELETE" });
+                                refetch();
+                              } catch (e: any) {
+                                Alert.alert("Erreur", e.message);
+                              }
+                            }
+                          },
+                        ]);
+                      }}
+                    >
+                      <Feather name="trash-2" size={13} color="#fff" />
+                      <Text style={styles.listingActionText}>Supprimer</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               ))}
             </View>
           )}
@@ -291,7 +323,10 @@ const styles = StyleSheet.create({
   actionText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   emptyState: { alignItems: "center", gap: 8, paddingVertical: 30 },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
-  listingsList: { gap: 0 },
+  listingsList: { gap: 4 },
+  listingActions: { flexDirection: "row", gap: 8, marginBottom: 10, marginTop: -4 },
+  listingActionBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+  listingActionText: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
   authPrompt: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
   authTitle: { fontSize: 24, fontFamily: "Inter_700Bold" },
   authText: { fontSize: 15, fontFamily: "Inter_400Regular", textAlign: "center" },

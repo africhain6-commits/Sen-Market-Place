@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { apiUrl } from "@/hooks/useApi";
 
 export interface Listing {
   id: number;
@@ -8,7 +9,7 @@ export interface Listing {
   price: number;
   category: string;
   city: string;
-  images: string[];
+  photos: string[];
   createdAt: string;
   status?: string;
   isFeatured?: boolean;
@@ -25,11 +26,18 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Véhicules": "🚗",
   "Électronique": "📱",
   "Emploi": "💼",
+  "Emplois": "💼",
   "Mode": "👗",
-  "Maison": "🛋️",
+  "Maison & Jardin": "🛋️",
   "Services": "🔧",
   "Autres": "📦",
 };
+
+function resolveUri(uri: string): string {
+  if (!uri) return "";
+  if (uri.startsWith("/api")) return apiUrl(uri);
+  return uri;
+}
 
 export function ListingCard({ listing, onPress, horizontal }: Props) {
   const colors = useColors();
@@ -51,7 +59,7 @@ export function ListingCard({ listing, onPress, horizontal }: Props) {
     return d.toLocaleDateString("fr-FR");
   };
 
-  const imageUri = listing.images?.[0];
+  const imageUri = listing.photos?.[0] ? resolveUri(listing.photos[0]) : null;
   const categoryIcon = CATEGORY_ICONS[listing.category] ?? "📦";
 
   if (horizontal) {
@@ -78,6 +86,19 @@ export function ListingCard({ listing, onPress, horizontal }: Props) {
           <Text style={[styles.hMeta, { color: colors.mutedForeground }]}>
             📍 {listing.city} · {timeAgo(listing.createdAt)}
           </Text>
+          {listing.status && listing.status !== "active" && (
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: listing.status === "pending" ? "#FEF3C7" : listing.status === "sold" ? "#D1FAE5" : colors.muted }
+            ]}>
+              <Text style={[
+                styles.statusText,
+                { color: listing.status === "pending" ? "#92400E" : listing.status === "sold" ? "#065F46" : colors.mutedForeground }
+              ]}>
+                {listing.status === "pending" ? "En attente" : listing.status === "sold" ? "Vendu" : listing.status}
+              </Text>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -130,14 +151,8 @@ const styles = StyleSheet.create({
     minWidth: 160,
     maxWidth: "48%",
   },
-  image: {
-    width: "100%",
-    height: 140,
-  },
-  imagePlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  image: { width: "100%", height: 140 },
+  imagePlaceholder: { alignItems: "center", justifyContent: "center" },
   categoryIcon: { fontSize: 24 },
   categoryIconLarge: { fontSize: 36 },
   featuredBadge: {
@@ -155,6 +170,8 @@ const styles = StyleSheet.create({
   price: { fontSize: 14, fontFamily: "Inter_700Bold", marginBottom: 4 },
   footer: { flexDirection: "row", justifyContent: "space-between" },
   meta: { fontSize: 11, fontFamily: "Inter_400Regular" },
+  statusBadge: { marginTop: 4, alignSelf: "flex-start", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  statusText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
 
   hCard: {
     flexDirection: "row",
