@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, ShieldCheck, Mail, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2, MessageCircle as Whatsapp, Facebook, Flag, TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Mail, Phone, AlertCircle, Home as HomeIcon, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight, X, ZoomIn, Share2, MessageCircle as Whatsapp, Facebook, Flag, TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDistanceToNow, format } from "date-fns";
@@ -496,8 +496,20 @@ export default function AnnonceDetail() {
                       onClick={() => trackMutation.mutate({ id: listingId, data: { eventType: "phone_click" } })}
                     >
                       <Button variant="outline" className="w-full gap-2">
-                        <Mail className="w-4 h-4" />
+                        <Phone className="w-4 h-4" />
                         {listing.user.phone}
+                      </Button>
+                    </a>
+                  )}
+                  {listing.user.email && !isOwner && (
+                    <a
+                      href={`mailto:${listing.user.email}`}
+                      className="w-full"
+                      data-testid="link-email"
+                    >
+                      <Button variant="outline" className="w-full gap-2">
+                        <Mail className="w-4 h-4" />
+                        {listing.user.email}
                       </Button>
                     </a>
                   )}

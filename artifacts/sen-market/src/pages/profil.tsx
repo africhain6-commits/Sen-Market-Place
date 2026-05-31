@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Calendar, Box, MessageCircle, Phone, Star } from "lucide-react";
+import { MapPin, Calendar, Box, MessageCircle, Phone, Star, Mail, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
@@ -38,6 +39,7 @@ function StarRating({ value, onChange }: { value: number; onChange?: (v: number)
 
 export default function Profil() {
   const [, params] = useRoute("/profil/:id");
+  const [, navigate] = useLocation();
   const userId = params?.id ? parseInt(params.id) : 0;
   const { user: currentUser, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -98,6 +100,13 @@ export default function Profil() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <button
+        onClick={() => window.history.back()}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Retour
+      </button>
       <div className="bg-primary/5 rounded-xl p-8 border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
           <AvatarImage src={user.avatarUrl || ""} />
@@ -149,6 +158,14 @@ export default function Profil() {
                 <Button size="sm" variant="outline" className="gap-2">
                   <Phone className="w-4 h-4" />
                   {user.phone}
+                </Button>
+              </a>
+            )}
+            {user.email && (
+              <a href={`mailto:${user.email}`} data-testid="profil-email">
+                <Button size="sm" variant="outline" className="gap-2">
+                  <Mail className="w-4 h-4" />
+                  {user.email}
                 </Button>
               </a>
             )}
