@@ -40,11 +40,22 @@ app.use(cookieParser());
 const sessionSecret = process.env.SESSION_SECRET ?? "sen-market-secret-key";
 const PgStore = connectPgSimple(session);
 
+// Create session table inline (avoids esbuild missing table.sql in production)
+pool.query(`
+  CREATE TABLE IF NOT EXISTS "session" (
+    "sid" varchar NOT NULL COLLATE "default",
+    "sess" json NOT NULL,
+    "expire" timestamp(6) NOT NULL,
+    CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+  ) WITH (OIDS=FALSE);
+  CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+`).catch((err: unknown) => logger.error({ err }, "session table init failed"));
+
 app.use(
   session({
     store: new PgStore({
       pool,
-      createTableIfMissing: true,
+      createTableIfMissing: false,
     }),
     secret: sessionSecret,
     resave: false,
