@@ -194,7 +194,7 @@ export default function PublierScreen() {
       price: price ? Number(price) : 0,
       category,
       city,
-      images: photos,
+      photos: photos,
     });
   };
 
