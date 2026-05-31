@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   phone?: string | null;
+  whatsapp?: string | null;
   avatarUrl?: string | null;
   isAdmin: boolean;
   createdAt: string;

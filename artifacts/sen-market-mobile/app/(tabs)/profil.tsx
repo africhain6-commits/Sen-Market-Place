@@ -6,7 +6,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
+  Linking,
   Platform,
   RefreshControl,
   ScrollView,
@@ -90,7 +90,25 @@ export default function ProfilScreen() {
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
-            <Text style={styles.profileEmail}>{user?.email}</Text>
+            <View style={styles.infoRow}>
+              <Feather name="mail" size={12} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.profileInfoText}>{user?.email}</Text>
+            </View>
+            {user?.phone && (
+              <TouchableOpacity style={styles.infoRow} onPress={() => Linking.openURL(`tel:${user.phone}`)}>
+                <Feather name="phone" size={12} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.profileInfoText}>{user.phone}</Text>
+              </TouchableOpacity>
+            )}
+            {user?.whatsapp && (
+              <TouchableOpacity
+                style={styles.infoRow}
+                onPress={() => Linking.openURL(`https://wa.me/${user.whatsapp!.replace(/\D/g, "")}`)}
+              >
+                <Feather name="message-circle" size={12} color="#25D366" />
+                <Text style={[styles.profileInfoText, { color: "#25D366" }]}>{user.whatsapp}</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
             <Feather name="log-out" size={20} color="rgba(255,255,255,0.7)" />
@@ -104,6 +122,56 @@ export default function ProfilScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor={colors.primary} />}
       >
+        {/* Info card */}
+        <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.infoCardRow}>
+            <Feather name="mail" size={16} color={colors.primary} />
+            <View style={styles.infoCardContent}>
+              <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Email</Text>
+              <Text style={[styles.infoCardValue, { color: colors.foreground }]}>{user?.email}</Text>
+            </View>
+          </View>
+          {user?.phone ? (
+            <TouchableOpacity style={styles.infoCardRow} onPress={() => Linking.openURL(`tel:${user.phone}`)}>
+              <Feather name="phone" size={16} color={colors.primary} />
+              <View style={styles.infoCardContent}>
+                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Téléphone</Text>
+                <Text style={[styles.infoCardValue, { color: colors.primary }]}>{user.phone}</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.infoCardRow}>
+              <Feather name="phone" size={16} color={colors.mutedForeground} />
+              <View style={styles.infoCardContent}>
+                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>Téléphone</Text>
+                <Text style={[styles.infoCardValue, { color: colors.mutedForeground }]}>Non renseigné</Text>
+              </View>
+            </View>
+          )}
+          {user?.whatsapp ? (
+            <TouchableOpacity
+              style={styles.infoCardRow}
+              onPress={() => Linking.openURL(`https://wa.me/${user.whatsapp!.replace(/\D/g, "")}`)}
+            >
+              <Feather name="message-circle" size={16} color="#25D366" />
+              <View style={styles.infoCardContent}>
+                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>WhatsApp</Text>
+                <Text style={[styles.infoCardValue, { color: "#25D366" }]}>{user.whatsapp}</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.infoCardRow}>
+              <Feather name="message-circle" size={16} color={colors.mutedForeground} />
+              <View style={styles.infoCardContent}>
+                <Text style={[styles.infoCardLabel, { color: colors.mutedForeground }]}>WhatsApp</Text>
+                <Text style={[styles.infoCardValue, { color: colors.mutedForeground }]}>Non renseigné</Text>
+              </View>
+            </View>
+          )}
+        </View>
+
         {/* Stats */}
         <View style={[styles.statsRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.stat}>
@@ -171,17 +239,37 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
   headerTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
-  profileHeader: { flexDirection: "row", alignItems: "center", gap: 14 },
-  bigAvatar: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" },
+  profileHeader: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  bigAvatar: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center", marginTop: 4 },
   avatarText: { fontSize: 26, fontFamily: "Inter_700Bold" },
-  profileInfo: { flex: 1 },
-  profileName: { color: "#fff", fontSize: 18, fontFamily: "Inter_700Bold" },
-  profileEmail: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: "Inter_400Regular" },
+  profileInfo: { flex: 1, gap: 4 },
+  profileName: { color: "#fff", fontSize: 18, fontFamily: "Inter_700Bold", marginBottom: 2 },
+  infoRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  profileInfoText: { color: "rgba(255,255,255,0.75)", fontSize: 12, fontFamily: "Inter_400Regular" },
   logoutBtn: { padding: 8 },
+  infoCard: {
+    margin: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  infoCardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#e5e7eb",
+  },
+  infoCardContent: { flex: 1 },
+  infoCardLabel: { fontSize: 11, fontFamily: "Inter_400Regular", marginBottom: 2 },
+  infoCardValue: { fontSize: 14, fontFamily: "Inter_500Medium" },
   scroll: { flex: 1 },
   statsRow: {
     flexDirection: "row",
-    margin: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
     borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
