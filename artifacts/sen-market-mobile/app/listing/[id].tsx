@@ -53,6 +53,7 @@ export default function ListingDetailScreen() {
   const queryClient = useQueryClient();
   const [currentImage, setCurrentImage] = useState(0);
   const [showContact, setShowContact] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [message, setMessage] = useState("");
 
   const { data: listing, isLoading } = useQuery<ListingDetail>({
@@ -154,22 +155,43 @@ export default function ListingDetailScreen() {
         <View style={styles.imageContainer}>
           {photos.length > 0 ? (
             <>
-              <Image
-                source={{ uri: resolveUri(photos[currentImage]) }}
-                style={styles.mainImage}
-                resizeMode="cover"
-              />
+              <TouchableOpacity activeOpacity={0.95} onPress={() => setShowPhotoModal(true)}>
+                <Image
+                  source={{ uri: resolveUri(photos[currentImage]) }}
+                  style={styles.mainImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              {/* Left / right arrows */}
               {photos.length > 1 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnails} contentContainerStyle={{ gap: 8, padding: 8 }}>
-                  {photos.map((img, i) => (
-                    <TouchableOpacity key={i} onPress={() => setCurrentImage(i)}>
-                      <Image
-                        source={{ uri: resolveUri(img) }}
-                        style={[styles.thumbnail, { borderColor: i === currentImage ? colors.accent : "transparent" }]}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                <>
+                  <TouchableOpacity
+                    style={[styles.arrowBtn, styles.arrowLeft]}
+                    onPress={() => setCurrentImage((i) => Math.max(0, i - 1))}
+                    disabled={currentImage === 0}
+                  >
+                    <Feather name="chevron-left" size={26} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.arrowBtn, styles.arrowRight]}
+                    onPress={() => setCurrentImage((i) => Math.min(photos.length - 1, i + 1))}
+                    disabled={currentImage === photos.length - 1}
+                  >
+                    <Feather name="chevron-right" size={26} color="#fff" />
+                  </TouchableOpacity>
+                  {/* Dots */}
+                  <View style={styles.dotsRow}>
+                    {photos.map((_, i) => (
+                      <View key={i} style={[styles.dot, { opacity: i === currentImage ? 1 : 0.45 }]} />
+                    ))}
+                  </View>
+                </>
+              )}
+              {/* Counter badge */}
+              {photos.length > 1 && (
+                <View style={styles.photoCounter}>
+                  <Text style={styles.photoCounterText}>{currentImage + 1}/{photos.length}</Text>
+                </View>
               )}
             </>
           ) : (
@@ -255,10 +277,10 @@ export default function ListingDetailScreen() {
                       <Text style={[styles.contactInfoText, { color: colors.foreground }]}>{seller.phone}</Text>
                     </TouchableOpacity>
                   )}
-                  {seller.whatsapp && (
-                    <TouchableOpacity style={[styles.contactInfoBtn, { backgroundColor: "#e8f5e9" }]} onPress={() => Linking.openURL(`https://wa.me/${seller.whatsapp!.replace(/\D/g, "")}`)}>
+                  {(seller.whatsapp || seller.phone) && (
+                    <TouchableOpacity style={[styles.contactInfoBtn, { backgroundColor: "#e8f5e9" }]} onPress={() => Linking.openURL(`https://wa.me/${(seller.whatsapp || seller.phone)!.replace(/\D/g, "")}`)}>
                       <Feather name="message-circle" size={15} color="#25D366" />
-                      <Text style={[styles.contactInfoText, { color: "#1a7f37" }]}>{seller.whatsapp}</Text>
+                      <Text style={[styles.contactInfoText, { color: "#1a7f37" }]}>WhatsApp {seller.whatsapp || seller.phone}</Text>
                     </TouchableOpacity>
                   )}
                   {seller.email && (
@@ -299,8 +321,8 @@ export default function ListingDetailScreen() {
               <Feather name="phone" size={18} color={colors.primary} />
             </TouchableOpacity>
           )}
-          {seller?.whatsapp && (
-            <TouchableOpacity onPress={() => Linking.openURL(`https://wa.me/${seller.whatsapp!.replace(/\D/g, "")}`)} style={[styles.ctaIconBtn, { backgroundColor: "#25D366" }]}>
+          {(seller?.whatsapp || seller?.phone) && (
+            <TouchableOpacity onPress={() => Linking.openURL(`https://wa.me/${(seller.whatsapp || seller.phone)!.replace(/\D/g, "")}`)} style={[styles.ctaIconBtn, { backgroundColor: "#25D366" }]}>
               <Feather name="message-circle" size={18} color="#fff" />
             </TouchableOpacity>
           )}
@@ -323,6 +345,39 @@ export default function ListingDetailScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Fullscreen photo modal */}
+      <Modal visible={showPhotoModal} animationType="fade" statusBarTranslucent>
+        <View style={styles.photoModal}>
+          <TouchableOpacity style={styles.photoModalClose} onPress={() => setShowPhotoModal(false)}>
+            <Feather name="x" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.photoModalCounter}>{currentImage + 1} / {photos.length}</Text>
+          <Image
+            source={{ uri: resolveUri(photos[currentImage]) }}
+            style={styles.photoModalImg}
+            resizeMode="contain"
+          />
+          {photos.length > 1 && (
+            <>
+              <TouchableOpacity
+                style={[styles.arrowBtn, styles.arrowLeft, styles.arrowBtnModal]}
+                onPress={() => setCurrentImage((i) => Math.max(0, i - 1))}
+                disabled={currentImage === 0}
+              >
+                <Feather name="chevron-left" size={30} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.arrowBtn, styles.arrowRight, styles.arrowBtnModal]}
+                onPress={() => setCurrentImage((i) => Math.min(photos.length - 1, i + 1))}
+                disabled={currentImage === photos.length - 1}
+              >
+                <Feather name="chevron-right" size={30} color="#fff" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </Modal>
 
       {/* Message modal */}
       <Modal visible={showContact} animationType="slide" presentationStyle="formSheet">
@@ -372,6 +427,35 @@ const styles = StyleSheet.create({
   noImage: { alignItems: "center", justifyContent: "center" },
   thumbnails: { maxHeight: 80 },
   thumbnail: { width: 64, height: 64, borderRadius: 8, borderWidth: 2 },
+  arrowBtn: {
+    position: "absolute", top: "38%", width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", zIndex: 5,
+  },
+  arrowLeft: { left: 10 },
+  arrowRight: { right: 10 },
+  arrowBtnModal: { top: 280 },
+  dotsRow: {
+    position: "absolute", bottom: 10, left: 0, right: 0,
+    flexDirection: "row", justifyContent: "center", gap: 6, zIndex: 5,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#fff" },
+  photoCounter: {
+    position: "absolute", bottom: 10, right: 12,
+    backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+    zIndex: 5,
+  },
+  photoCounterText: { color: "#fff", fontSize: 12, fontFamily: "Inter_500Medium" },
+  photoModal: { flex: 1, backgroundColor: "#000", justifyContent: "center", alignItems: "center" },
+  photoModalClose: {
+    position: "absolute", top: 50, right: 20, zIndex: 10,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center", justifyContent: "center",
+  },
+  photoModalCounter: {
+    position: "absolute", top: 58, left: 0, right: 0, textAlign: "center",
+    color: "#fff", fontSize: 14, fontFamily: "Inter_500Medium", zIndex: 10,
+  },
+  photoModalImg: { width: "100%", height: "80%" },
   backBtn: {
     position: "absolute", left: 16, width: 40, height: 40, borderRadius: 20,
     backgroundColor: "rgba(10,36,99,0.85)", alignItems: "center", justifyContent: "center",
