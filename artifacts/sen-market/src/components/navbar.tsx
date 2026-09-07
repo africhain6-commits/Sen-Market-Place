@@ -177,8 +177,7 @@ export function Navbar() {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatarUrl || ""} alt={user.name} />
                     <AvatarFallback className="bg-primary-foreground text-primary">
-                      {user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
+                      {user.name?.charAt(0)?.toUpperCase() || "?"}                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
