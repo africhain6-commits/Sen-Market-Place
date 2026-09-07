@@ -592,8 +592,7 @@ export default function TableauDeBord() {
                   {conversations.map((conv, i) => (
                     <div key={`${conv.listingId}-${conv.otherUser.id}-${i}`} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold shrink-0">
-                        {conv.otherUser.name.charAt(0).toUpperCase()}
-                      </div>
+                        {conv.otherUser?.name?.charAt(0)?.toUpperCase() || "?"}                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
                           <h4 className="font-semibold">{conv.otherUser.name}</h4>
