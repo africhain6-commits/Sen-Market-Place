@@ -547,8 +547,7 @@ export default function Admin() {
                   {users.map((u) => (
                     <div key={u.id} className="flex items-center gap-4 p-4 border rounded-lg" data-testid={`admin-user-${u.id}`}>
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
-                        {u.name.charAt(0).toUpperCase()}
-                      </div>
+                        {u.name?.charAt(0)?.toUpperCase() || "?"}                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{u.name}</span>
