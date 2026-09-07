@@ -111,8 +111,7 @@ export default function Profil() {
         <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
           <AvatarImage src={user.avatarUrl || ""} />
           <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-            {user.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
+            {user.name?.charAt(0)?.toUpperCase() || "?"}          </AvatarFallback>
         </Avatar>
         
         <div className="text-center sm:text-left flex-1">
