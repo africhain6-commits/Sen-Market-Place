@@ -10,12 +10,8 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Uncomment and set this once your backend (api-server) is hosted somewhere
-# (Render, Railway, Fly.io...). This proxies /api/* calls made by the frontend
-# to your real backend, since Netlify can't run the Express server itself.
-# [[redirects]]
-#   from = "/api/*"
-#   to = "https://YOUR-BACKEND-URL.example.com/api/:splat"
-#   status = 200
-#   force = true
+  [[redirects]]
+    from = "/api/*"
+    to = "https://senmarket-api.onrender.com/api/:splat"
+    status = 200
+    force = true
