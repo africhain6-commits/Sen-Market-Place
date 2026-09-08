@@ -462,7 +462,7 @@ export default function AnnonceDetail() {
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={listing.user.avatarUrl || ""} />
-                    <AvatarFallback className="bg-primary/10 text-primary">{listing.user?.name?.charAt(0)?.toUpperCase() || "?"}/AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary">{listing.user?.name?.charAt(0)?.toUpperCase() || "?"}</AvatarFallback>
                   </Avatar>
                   <div>
                     <Link href={`/profil/${listing.user.id}`} className="font-medium hover:text-primary transition-colors">{listing.user.name}</Link>
