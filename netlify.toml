@@ -5,13 +5,13 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA routing: any non-file route falls back to index.html
+[[redirects]]
+  from = "/api/*"
+  to = "https://senmarket-api.onrender.com/api/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  [[redirects]]
-    from = "/api/*"
-    to = "https://senmarket-api.onrender.com/api/:splat"
-    status = 200
-    force = true
