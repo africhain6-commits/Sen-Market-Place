@@ -59,8 +59,7 @@ export class ObjectStorageService {
     const response = await fetch(
       `${url}/storage/v1/object/upload/sign/${bucket}/${objectName}`,
       {
-        method: "POST",   body: JSON.stringify({}),        headers: {
-          apikey: serviceRoleKey,
+        method: "POST",   body: JSON.stringify({}),        headers: {   Authorization: `Bearer ${serviceRoleKey}`,          apikey: serviceRoleKey,
           "Content-Type": "application/json",
         },
         signal: AbortSignal.timeout(30_000),
