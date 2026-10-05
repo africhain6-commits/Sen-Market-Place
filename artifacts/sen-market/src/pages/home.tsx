@@ -23,6 +23,7 @@ import {
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { formatFcfa } from "@/lib/format";
 
 const SEARCH_CATEGORIES = [
   { label: "Tout", value: "" },
@@ -97,7 +98,7 @@ export default function Home() {
 
   const formatPrice = (price?: number | null) => {
     if (price == null) return "Prix sur demande";
-    return new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(price);
+    return formatFcfa(price);
   };
 
   const totalListings = stats?.reduce((acc, s) => acc + s.count, 0) ?? 0;
@@ -265,14 +266,14 @@ export default function Home() {
                       </div>
                     </div>
                     <CardContent className="p-3 flex-1">
-                      <div className="font-bold text-base text-primary mb-1">{formatPrice(listing.price)}</div>
+                      <div className="font-bold text-sm sm:text-base text-primary mb-1 break-words">{formatPrice(listing.price)}</div>
                       <h3 className="text-sm font-medium text-foreground line-clamp-1">{listing.title}</h3>
-                      <div className="flex items-center text-xs text-muted-foreground gap-2 mt-2">
+                      <div className="flex flex-wrap items-center text-xs text-muted-foreground gap-x-2 gap-y-1 mt-2">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           <span className="truncate">{listing.city}</span>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           <span>{formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true, locale: fr })}</span>
                         </div>
@@ -304,7 +305,7 @@ export default function Home() {
             Publiez votre annonce gratuitement et touchez des milliers d'acheteurs potentiels à travers le Sénégal.
           </p>
           <Link href="/publier">
-            <Button size="lg" className="px-8 text-lg h-14 bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold" data-testid="button-cta-publish">
+            <Button size="lg" className="max-w-full h-auto min-h-14 py-3 px-6 sm:px-8 text-base sm:text-lg whitespace-normal text-center bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold" data-testid="button-cta-publish">
               Publier une annonce gratuitement
             </Button>
           </Link>
