@@ -330,4 +330,13 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}/* Mobile : pas de débordement horizontal + marge de sécurité iPhone */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
