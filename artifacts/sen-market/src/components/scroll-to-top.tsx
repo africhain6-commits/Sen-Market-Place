@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { ChevronUp } from "lucide-react";
 
 export function ScrollToTop() {
   const [visible, setVisible] = useState(false);
+  const [location] = useLocation();
+
+  // À chaque changement de page, on remonte tout en haut
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 350);
