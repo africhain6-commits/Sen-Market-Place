@@ -17,7 +17,7 @@ export function MobileBottomNav() {
     <>
       {/* Bottom nav bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-5 h-16 w-full max-w-full">
           <Link href="/" onClick={() => setMenuOpen(false)}>
             <button className={`flex flex-col items-center justify-center h-full w-full gap-0.5 transition-colors ${isActive("/") ? "text-primary" : "text-gray-500"}`}>
               <Home className="w-5 h-5" />
@@ -63,7 +63,7 @@ export function MobileBottomNav() {
       {menuOpen && (
         <>
           <div className="md:hidden fixed inset-0 z-30 bg-black/40" onClick={() => setMenuOpen(false)} />
-          <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white rounded-t-2xl shadow-2xl border-t border-gray-100 p-4 pb-2 animate-in slide-in-from-bottom">
+          <div className="md:hidden fixed left-0 right-0 z-40 bg-white rounded-t-2xl shadow-2xl border-t border-gray-100 p-4 pb-2 animate-in slide-in-from-bottom" style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}>
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
 
             {/* Install button — always shown if not already installed */}
@@ -121,7 +121,7 @@ export function MobileBottomNav() {
       )}
 
       {/* Spacer so content doesn't hide behind bottom nav */}
-      <div className="md:hidden h-16" />
+      <div className="md:hidden" style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }} />
     </>
   );
 }
