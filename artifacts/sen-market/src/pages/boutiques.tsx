@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Clock, Scissors, ShoppingBag, Star, ArrowRight, PlusCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { formatFcfa } from "@/lib/format";
 
 const BOUTIQUE_TYPES = [
   {
@@ -41,7 +42,7 @@ export default function Boutiques() {
 
   const formatPrice = (price?: number | null) => {
     if (price == null) return "Prix sur demande";
-    return new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(price);
+    return formatFcfa(price);
   };
 
   return (
@@ -70,7 +71,7 @@ export default function Boutiques() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              className="h-14 px-8 text-base bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold"
+              className="max-w-full h-auto min-h-14 py-3 px-6 sm:px-8 text-base whitespace-normal text-center bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold"
               onClick={() => setLocation("/publier")}
             >
               <PlusCircle className="w-5 h-5 mr-2" />
@@ -79,7 +80,7 @@ export default function Boutiques() {
             <Button
               size="lg"
               variant="outline"
-              className="h-14 px-8 text-base text-white border-white/50 hover:bg-white/10 hover:text-white"
+              className="max-w-full h-auto min-h-14 py-3 px-6 sm:px-8 text-base whitespace-normal text-center text-white border-white/50 hover:bg-white/10 hover:text-white"
               onClick={() => setLocation("/annonces?category=Services")}
             >
               Voir tous les services
@@ -163,9 +164,9 @@ export default function Boutiques() {
                       )}
                     </div>
                     <CardContent className="p-4 flex-1">
-                      <div className="font-bold text-lg text-primary mb-1">{formatPrice(listing.price)}</div>
+                      <div className="font-bold text-lg text-primary mb-1 break-words">{formatPrice(listing.price)}</div>
                       <h3 className="font-medium text-foreground line-clamp-1">{listing.title}</h3>
-                      <div className="flex items-center text-xs text-muted-foreground gap-3 mt-3">
+                      <div className="flex flex-wrap items-center text-xs text-muted-foreground gap-x-3 gap-y-1 mt-3">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           <span>{listing.city}</span>
@@ -200,7 +201,7 @@ export default function Boutiques() {
             Référencez votre boutique ou vos services gratuitement sur SenMarket et touchez des milliers de clients à travers le Sénégal.
           </p>
           <Link href="/publier">
-            <Button size="lg" className="px-8 text-lg h-14 bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
+            <Button size="lg" className="max-w-full h-auto min-h-14 py-3 px-6 sm:px-8 text-base sm:text-lg whitespace-normal text-center bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0">
               <PlusCircle className="w-5 h-5 mr-2" />
               Référencer ma boutique gratuitement
             </Button>
