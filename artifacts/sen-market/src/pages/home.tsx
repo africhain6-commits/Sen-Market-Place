@@ -26,6 +26,10 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { formatFcfa } from "@/lib/format";
 
+// Photo de couverture de l'accueil (fichier à mettre dans le dossier public/).
+// Mettre "" pour revenir au fond bleu uni.
+const HERO_IMAGE = "/couverture.jpg";
+
 const SEARCH_CATEGORIES = [
   { label: "Tout", value: "" },
   { label: "Immobilier", value: "Immobilier" },
@@ -124,7 +128,16 @@ export default function Home() {
       </div>
 
       {/* Recherche */}
-      <section className="bg-primary text-primary-foreground py-8 md:py-20">
+      <section
+        className="bg-primary text-primary-foreground py-8 md:py-20 bg-cover bg-center"
+        style={
+          HERO_IMAGE
+            ? {
+                backgroundImage: `linear-gradient(rgba(10,36,99,0.78), rgba(10,36,99,0.62)), url('${HERO_IMAGE}')`,
+              }
+            : undefined
+        }
+      >
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold mb-2 md:mb-4 tracking-tight">
             Trouvez ce que vous cherchez au Sénégal
