@@ -183,7 +183,7 @@ export default function AnnonceDetail() {
   const nextPhoto = () => setCurrentPhoto((i) => (i === photos.length - 1 ? 0 : i + 1));
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pb-28 md:pb-8">
       {/* Back button + breadcrumb + actions */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setLocation("/annonces")}>
@@ -585,6 +585,40 @@ export default function AnnonceDetail() {
           </div>
         </div>
       </div>
+
+      {/* Barre fixe Appeler / WhatsApp (mobile) */}
+      {!isOwner && listing.user && (listing.user.whatsapp || listing.user.phone) && (
+        <div
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t p-3 flex gap-2"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          data-testid="sticky-contact-bar"
+        >
+          {listing.user.phone && (
+            <a
+              href={`tel:${listing.user.phone}`}
+              className="flex-1"
+              onClick={() => trackMutation.mutate({ id: listingId, data: { eventType: "phone_click" } })}
+            >
+              <Button variant="outline" className="w-full gap-2">
+                <Phone className="w-4 h-4" />
+                Appeler
+              </Button>
+            </a>
+          )}
+          <a
+            href={`https://wa.me/${(listing.user.whatsapp || listing.user.phone)!.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1"
+            onClick={() => trackMutation.mutate({ id: listingId, data: { eventType: "whatsapp_click" } })}
+          >
+            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
+            </Button>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
