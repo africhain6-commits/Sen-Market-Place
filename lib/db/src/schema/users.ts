@@ -12,6 +12,10 @@ export const usersTable = pgTable("users", {
   city: text("city"),
   avatarUrl: text("avatar_url"),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  accountType: text("account_type").default("particulier").notNull(),
+  agencyName: text("agency_name"),
+  languages: text("languages"),
+  isVerified: boolean("is_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
