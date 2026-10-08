@@ -124,9 +124,6 @@ export function MobileBottomNav() {
           </div>
         </>
       )}
-
-      {/* Spacer so content doesn't hide behind bottom nav */}
-      <div className="md:hidden" style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }} />
     </>
   );
 }
