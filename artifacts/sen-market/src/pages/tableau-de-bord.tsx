@@ -295,7 +295,7 @@ export default function TableauDeBord() {
                             Renouveler
                           </Button>
                         )}
-                        {listing.status !== "sold" && (
+                        {(listing.status === "active" || listing.status === "inactive") && (
                           <Button
                             size="sm"
                             variant="outline"
