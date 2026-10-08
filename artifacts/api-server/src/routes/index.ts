@@ -12,6 +12,7 @@ import notificationsRouter from "./notifications";
 import reportsRouter from "./reports";
 import searchAlertsRouter from "./search_alerts";
 import priceHistoryRouter from "./price_history";
+import courtiersRouter from "./courtiers";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(reviewsRouter);
 router.use(notificationsRouter);
 router.use(reportsRouter);
 router.use(searchAlertsRouter);
+router.use(courtiersRouter);
 
 export default router;
