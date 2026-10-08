@@ -110,6 +110,11 @@ export function MobileBottomNav() {
                   Boutiques & Couturiers
                 </button>
               </Link>
+              <Link href="/courtiers" onClick={() => setMenuOpen(false)}>
+                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors">
+                  Courtiers & professionnels
+                </button>
+              </Link>
               <Link href="/publicite" onClick={() => setMenuOpen(false)}>
                 <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors">
                   Publicité
