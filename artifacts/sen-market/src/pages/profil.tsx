@@ -1,18 +1,22 @@
 import { useRoute, Link } from "wouter";
-import { useGetUser, getGetUserQueryKey, useGetUserReviews, getGetUserReviewsQueryKey, useCreateReview } from "@workspace/api-client-react";
+import { useGetUser, getGetUserQueryKey, useGetUserReviews, getGetUserReviewsQueryKey, useCreateReview, useUpdateUser } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Calendar, Box, MessageCircle, Phone, Star, Mail, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Calendar, Box, MessageCircle, Phone, Star, Mail, ArrowLeft, Pencil } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { PhotoUploader } from "@/components/photo-uploader";
+
+const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
 
 function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
   const [hover, setHover] = useState(0);
@@ -39,12 +43,18 @@ function StarRating({ value, onChange }: { value: number; onChange?: (v: number)
 
 export default function Profil() {
   const [, params] = useRoute("/profil/:id");
-  const [, navigate] = useLocation();
   const userId = params?.id ? parseInt(params.id) : 0;
   const { user: currentUser, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editWhatsapp, setEditWhatsapp] = useState("");
+  const [editAvatar, setEditAvatar] = useState("");
 
   const { data: user, isLoading: isLoadingUser } = useGetUser(userId, {
     query: {
@@ -74,6 +84,19 @@ export default function Profil() {
     },
   });
 
+  const updateUser = useUpdateUser({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Profil mis à jour", description: "Vos modifications ont été enregistrées." });
+        setEditing(false);
+        queryClient.invalidateQueries();
+      },
+      onError: () => {
+        toast({ title: "Erreur", description: "Impossible d'enregistrer vos modifications.", variant: "destructive" });
+      },
+    },
+  });
+
   if (isLoadingUser) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -98,6 +121,32 @@ export default function Profil() {
   const isOwnProfile = currentUser?.id === userId;
   const alreadyReviewed = reviews?.some((r: any) => r.fromUser?.id === currentUser?.id);
 
+  const startEditing = () => {
+    setEditName(user.name || "");
+    setEditCity(user.city || "");
+    setEditPhone(user.phone || "");
+    setEditWhatsapp(user.whatsapp || "");
+    setEditAvatar(user.avatarUrl || "");
+    setEditing(true);
+  };
+
+  const saveProfile = () => {
+    if (!editName.trim()) {
+      toast({ title: "Nom obligatoire", description: "Veuillez saisir votre nom.", variant: "destructive" });
+      return;
+    }
+    updateUser.mutate({
+      id: userId,
+      data: {
+        name: editName.trim(),
+        city: editCity,
+        phone: editPhone,
+        whatsapp: editWhatsapp,
+        avatarUrl: editAvatar,
+      },
+    } as any);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <button
@@ -107,70 +156,133 @@ export default function Profil() {
         <ArrowLeft className="w-4 h-4" />
         Retour
       </button>
-      <div className="bg-primary/5 rounded-xl p-8 border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
-          <AvatarImage src={user.avatarUrl || ""} />
-          <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-            {user.name?.charAt(0)?.toUpperCase() || "?"}          </AvatarFallback>
-        </Avatar>
-        
-        <div className="text-center sm:text-left flex-1">
-          <h1 className="text-3xl font-bold mb-1">{user.name}</h1>
 
-          {avgRating !== null && (
-            <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
-              <StarRating value={Math.round(avgRating)} />
-              <span className="text-sm text-muted-foreground">
-                {avgRating.toFixed(1)} ({reviews!.length} avis)
-              </span>
+      {editing && isOwnProfile ? (
+        <div className="bg-primary/5 rounded-xl p-6 border mb-8 space-y-5">
+          <h2 className="text-xl font-bold">Modifier mon profil</h2>
+
+          <div>
+            <label className="text-sm font-medium block mb-1">Photo de profil</label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Pour changer la photo, supprimez l'ancienne puis ajoutez la nouvelle.
+            </p>
+            <PhotoUploader
+              photos={editAvatar ? [editAvatar] : []}
+              onChange={(p: string[]) => setEditAvatar(p[0] || "")}
+              maxPhotos={1}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium block mb-1">Nom *</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
             </div>
-          )}
-          
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-muted-foreground mt-4">
-            {user.city && (
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>{user.city}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              <span>Membre depuis {format(new Date(user.createdAt), "MMMM yyyy", { locale: fr })}</span>
+            <div>
+              <label className="text-sm font-medium block mb-1">Ville</label>
+              <Select value={editCity} onValueChange={setEditCity}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {CITIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Téléphone</label>
+              <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} inputMode="tel" placeholder="+221 77 000 00 00" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium block mb-1">WhatsApp</label>
+              <Input value={editWhatsapp} onChange={(e) => setEditWhatsapp(e.target.value)} inputMode="tel" placeholder="+221 77 000 00 00" />
             </div>
           </div>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-4">
-            {user.whatsapp && (
-              <a
-                href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="profil-whatsapp"
-              >
-                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp
-                </Button>
-              </a>
-            )}
-            {user.phone && (
-              <a href={`tel:${user.phone}`} data-testid="profil-phone">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Phone className="w-4 h-4" />
-                  {user.phone}
-                </Button>
-              </a>
-            )}
-            {user.email && (
-              <a href={`mailto:${user.email}`} data-testid="profil-email">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Mail className="w-4 h-4" />
-                  {user.email}
-                </Button>
-              </a>
-            )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setEditing(false)} disabled={updateUser.isPending}>
+              Annuler
+            </Button>
+            <Button onClick={saveProfile} disabled={updateUser.isPending}>
+              {updateUser.isPending ? "Enregistrement..." : "Enregistrer"}
+            </Button>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-primary/5 rounded-xl p-8 border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
+            <AvatarImage src={user.avatarUrl || ""} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
+              {user.name?.charAt(0)?.toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="text-center sm:text-left flex-1">
+            <h1 className="text-3xl font-bold mb-1">{user.name}</h1>
+
+            {avgRating !== null && (
+              <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
+                <StarRating value={Math.round(avgRating)} />
+                <span className="text-sm text-muted-foreground">
+                  {avgRating.toFixed(1)} ({reviews!.length} avis)
+                </span>
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-muted-foreground mt-4">
+              {user.city && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{user.city}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span>Membre depuis {format(new Date(user.createdAt), "MMMM yyyy", { locale: fr })}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-4">
+              {isOwnProfile && (
+                <Button size="sm" className="gap-2" onClick={startEditing} data-testid="profil-edit">
+                  <Pencil className="w-4 h-4" />
+                  Modifier mon profil
+                </Button>
+              )}
+              {user.whatsapp && (
+                <a
+                  href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="profil-whatsapp"
+                >
+                  <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp
+                  </Button>
+                </a>
+              )}
+              {user.phone && (
+                <a href={`tel:${user.phone}`} data-testid="profil-phone">
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <Phone className="w-4 h-4" />
+                    {user.phone}
+                  </Button>
+                </a>
+              )}
+              {user.email && (
+                <a href={`mailto:${user.email}`} data-testid="profil-email">
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <Mail className="w-4 h-4" />
+                    {user.email}
+                  </Button>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card className="mb-6">
         <CardHeader>
