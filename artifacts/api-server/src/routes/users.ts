@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
-import { GetUserParams, UpdateUserParams, UpdateUserBody } from "@workspace/api-zod";
+import { GetUserParams, UpdateUserParams } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -43,15 +43,47 @@ router.patch("/users/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = UpdateUserBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  // Seuls ces champs peuvent être modifiés par l'utilisateur lui-même
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const updates: Partial<typeof usersTable.$inferInsert> = {};
+
+  const readText = (value: unknown, max: number): string | null | undefined => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    if (typeof value !== "string") return undefined;
+    const trimmed = value.trim().slice(0, max);
+    return trimmed === "" ? null : trimmed;
+  };
+
+  if (body.name !== undefined) {
+    const name = readText(body.name, 100);
+    if (!name) {
+      res.status(400).json({ error: "Le nom est obligatoire" });
+      return;
+    }
+    updates.name = name;
+  }
+
+  const phone = readText(body.phone, 30);
+  if (phone !== undefined) updates.phone = phone;
+
+  const whatsapp = readText(body.whatsapp, 30);
+  if (whatsapp !== undefined) updates.whatsapp = whatsapp;
+
+  const city = readText(body.city, 100);
+  if (city !== undefined) updates.city = city;
+
+  const avatarUrl = readText(body.avatarUrl, 500);
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "Aucune modification à enregistrer" });
     return;
   }
 
   const [updated] = await db
     .update(usersTable)
-    .set(parsed.data)
+    .set(updates)
     .where(eq(usersTable.id, params.data.id))
     .returning();
 
