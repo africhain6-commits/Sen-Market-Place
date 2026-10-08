@@ -143,6 +143,23 @@ router.get("/listings/:id", optionalAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  // Une annonce non validée (en attente ou refusée) n'est visible que par son auteur et les admins
+  if (row.listing.status === "pending" || row.listing.status === "rejected") {
+    let allowed = false;
+    if (req.userId) {
+      if (req.userId === row.listing.userId) {
+        allowed = true;
+      } else {
+        const [viewer] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId));
+        allowed = viewer?.isAdmin === true;
+      }
+    }
+    if (!allowed) {
+      res.status(404).json({ error: "Annonce introuvable" });
+      return;
+    }
+  }
+
   res.json(formatListing(row.listing, row.user));
 });
 
@@ -203,6 +220,19 @@ router.patch("/listings/:id", requireAuth, async (req, res): Promise<void> => {
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+
+  // Seul un admin peut valider une annonce : l'auteur ne peut pas changer le statut d'une annonce en attente ou refusée
+  if (parsed.data.status !== undefined) {
+    const [me] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!));
+    if (me?.isAdmin !== true) {
+      const locked = existing.status === "pending" || existing.status === "rejected";
+      const allowedStatuses = ["active", "inactive", "sold"];
+      if (locked || !allowedStatuses.includes(parsed.data.status)) {
+        res.status(403).json({ error: "Seul un administrateur peut valider cette annonce" });
+        return;
+      }
+    }
   }
 
   const updateData: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
