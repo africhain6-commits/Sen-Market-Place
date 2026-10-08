@@ -48,6 +48,9 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* Espace en bas pour que le contenu ne passe pas sous la barre de navigation mobile */}
+      <div className="md:hidden" style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }} />
     </div>
   );
 }
