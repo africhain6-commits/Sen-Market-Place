@@ -16,7 +16,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { Info, TrendingUp } from "lucide-react";
 
-const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin", "Boutiques & Couturiers"];const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
+const CATEGORIES = ["Immobilier", "Véhicules", "Emplois", "Services", "Électronique", "Maison & Jardin", "Boutiques & Couturiers", "Animaux & Compagnie"];
+const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
 
 function parseFrenchPrice(val: string): number | undefined {
   if (!val || val.trim() === "") return undefined;
