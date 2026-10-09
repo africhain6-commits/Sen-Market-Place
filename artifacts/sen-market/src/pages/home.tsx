@@ -21,9 +21,8 @@ import {
   ShieldCheck,
   Star,
   Users,
-  Truck,
-  HardHat,
   Building2,
+  PawPrint,
 } from "lucide-react";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -33,6 +32,8 @@ import { formatFcfa } from "@/lib/format";
 // Photo de couverture de l'accueil (fichier à mettre dans le dossier public/).
 // Mettre "" pour revenir au fond bleu uni.
 const HERO_IMAGE = "/couverture.jpg";
+
+const SUB_LIMIT = 6;
 
 const SEARCH_CATEGORIES = [
   { label: "Tout", value: "" },
@@ -44,78 +45,170 @@ const SEARCH_CATEGORIES = [
   { label: "Boutiques", value: "" , href: "/boutiques" },
 ];
 
-const categories = [
+type Sub = string | { label: string; href?: string; search?: string };
+
+const subLabel = (s: Sub) => (typeof s === "string" ? s : s.label);
+const subHref = (catHref: string, s: Sub) => {
+  if (typeof s !== "string" && s.href) return s.href;
+  const term = typeof s === "string" ? s : s.search ?? s.label;
+  return `${catHref}${catHref.includes("?") ? "&" : "?"}search=${encodeURIComponent(term)}`;
+};
+
+const categories: {
+  id: string;
+  short: string;
+  icon: typeof HomeIcon;
+  color: string;
+  href: string;
+  subs: Sub[];
+}[] = [
   {
     id: "Immobilier", short: "Immobilier", icon: HomeIcon,
     color: "bg-blue-100 text-blue-600",
     href: "/annonces?category=Immobilier",
-    subs: ["Appartements", "Maisons", "Terrains", "Bureaux"],
+    subs: [
+      { label: "Nouveaux projets", href: "/projets" },
+      "Appartements",
+      "Studios",
+      { label: "1 chambre", search: "1 chambre" },
+      { label: "2 chambres", search: "2 chambres" },
+      { label: "3 chambres et plus", search: "3 chambres" },
+      "Villas",
+      "Maisons",
+      "Terrains",
+      { label: "Bureaux & commerces", search: "bureau" },
+      "Colocation",
+      "Location",
+      "Vente",
+    ],
   },
   {
     id: "Véhicules", short: "Véhicules", icon: Car,
     color: "bg-red-100 text-red-600",
     href: "/annonces?category=Véhicules",
-    subs: ["Voitures", "Motos", "Camions", "Pièces détachées"],
+    subs: [
+      "Voitures",
+      { label: "Voitures d'occasion", search: "occasion" },
+      { label: "Voitures neuves", search: "neuve" },
+      "Motos",
+      "Camions",
+      "Pièces détachées",
+      { label: "Location de voitures", search: "location" },
+    ],
   },
   {
     id: "Emplois", short: "Emplois", icon: Briefcase,
     color: "bg-green-100 text-green-600",
     href: "/annonces?category=Emplois",
-    subs: ["Temps plein", "Freelance", "Stage", "Petits boulots"],
+    subs: [
+      { label: "Offres d'emploi", search: "recrute" },
+      { label: "Recherche d'emploi - CV", search: "CV" },
+      "Temps plein",
+      "Freelance",
+      "Stage",
+      "Petits boulots",
+    ],
   },
   {
     id: "Électronique", short: "Électronique", icon: Smartphone,
     color: "bg-amber-100 text-amber-600",
     href: "/annonces?category=Électronique",
-    subs: ["Téléphones", "Ordinateurs", "TV & Audio", "Accessoires"],
+    subs: [
+      { label: "Téléphones & tablettes", search: "téléphone" },
+      "Ordinateurs",
+      { label: "TV & vidéo", search: "TV" },
+      { label: "Consoles & jeux vidéo", search: "console" },
+      { label: "Audio & musique", search: "audio" },
+      { label: "Écouteurs & casques", search: "écouteurs" },
+      { label: "Caméras & appareils photo", search: "caméra" },
+      { label: "Sécurité & surveillance", search: "surveillance" },
+      { label: "Réseau", search: "routeur" },
+      { label: "Imprimantes & scanners", search: "imprimante" },
+      { label: "Écrans d'ordinateur", search: "écran" },
+      { label: "Composants informatiques", search: "composant" },
+      "Accessoires",
+      "Logiciels",
+    ],
   },
   {
     id: "Services", short: "Services", icon: Wrench,
     color: "bg-purple-100 text-purple-600",
     href: "/annonces?category=Services",
-    subs: ["Plomberie", "Électricité", "Ménage", "Transport"],
+    subs: [
+      { label: "Construction & métiers", search: "construction" },
+      { label: "Services auto", search: "auto" },
+      { label: "Services informatiques", search: "informatique" },
+      { label: "Réparation", search: "réparation" },
+      { label: "Nettoyage", search: "nettoyage" },
+      { label: "Impression", search: "impression" },
+      { label: "Logistique & livraison", search: "livraison" },
+      { label: "Juridique", search: "juridique" },
+      { label: "Fiscalité & finance", search: "fiscalité" },
+      { label: "Recrutement", search: "recrutement" },
+      { label: "Location", search: "location" },
+      { label: "Chauffeur & transfert aéroport", search: "chauffeur" },
+      { label: "Voyages & circuits", search: "voyage" },
+      { label: "Cours & classes", search: "cours" },
+      { label: "Garde d'enfants", search: "garde" },
+      { label: "Santé & beauté", search: "beauté" },
+    ],
   },
   {
     id: "Maison & Jardin", short: "Maison", icon: Trees,
     color: "bg-emerald-100 text-emerald-600",
     href: "/annonces?category=Maison%20%26%20Jardin",
-    subs: ["Meubles", "Électroménager", "Décoration", "Jardinage"],
+    subs: [
+      "Meubles",
+      "Électroménager",
+      "Décoration",
+      "Jardinage",
+      { label: "Réparation & construction", search: "construction" },
+      { label: "Équipement & outils pro", search: "outils" },
+    ],
   },
   {
     id: "Boutiques & Couturiers", short: "Boutiques", icon: Scissors,
     color: "bg-pink-100 text-pink-600",
     href: "/boutiques",
-    subs: ["Mode femme", "Mode homme", "Couture sur mesure", "Tissus & Bazin"],
+    subs: [
+      "Mode femme",
+      "Mode homme",
+      "Couture sur mesure",
+      "Tissus & Bazin",
+      { label: "Beauté & soins personnels", search: "beauté" },
+      { label: "Bébés & enfants", search: "bébé" },
+    ],
+  },
+  {
+    id: "Animaux & Compagnie", short: "Animaux", icon: PawPrint,
+    color: "bg-orange-100 text-orange-600",
+    href: "/annonces?category=Animaux%20%26%20Compagnie",
+    subs: [
+      { label: "Chiens & chiots", search: "chien" },
+      { label: "Chats & chatons", search: "chat" },
+      "Oiseaux",
+      "Poissons",
+      { label: "Autres animaux", search: "animal" },
+      { label: "Accessoires pour animaux", search: "accessoires" },
+      { label: "Services animaliers", search: "vétérinaire" },
+    ],
   },
 ];
 
-const SERVICES = [
-  {
-    label: "Emplois",
-    text: "Offres et demandes d'emploi",
-    icon: Briefcase,
-    color: "bg-green-100 text-green-600",
-    href: "/annonces?category=Emplois",
-  },
-  {
-    label: "Livraison",
-    text: "Coursiers et transport de colis",
-    icon: Truck,
-    color: "bg-amber-100 text-amber-600",
-    href: "/annonces?category=Services&search=Livraison",
-  },
-  {
-    label: "Travaux",
-    text: "Maçons, plombiers, électriciens",
-    icon: HardHat,
-    color: "bg-purple-100 text-purple-600",
-    href: "/annonces?category=Services&search=Travaux",
-  },
-];
+// Rangée du téléphone : « Projets » juste après Immobilier
+const PROJECT_CHIP = {
+  id: "Projets",
+  short: "Projets",
+  icon: Building2,
+  color: "bg-sky-100 text-sky-600",
+  href: "/projets",
+};
+const chips = [categories[0], PROJECT_CHIP, ...categories.slice(1)];
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
+  const [expanded, setExpanded] = useState<string[]>([]);
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -237,7 +330,7 @@ export default function Home() {
       {/* Catégories en une ligne (téléphone seulement) */}
       <section className="md:hidden border-b bg-background py-4">
         <div className="flex gap-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-testid="category-chips">
-          {categories.map((cat) => {
+          {chips.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link key={cat.id} href={cat.href} className="flex flex-col items-center gap-1.5 w-[68px] shrink-0">
@@ -248,59 +341,6 @@ export default function Home() {
               </Link>
             );
           })}
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="py-8 bg-background border-b" data-testid="home-services">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold mb-4">Services</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {SERVICES.map((s) => {
-              const Icon = s.icon;
-              return (
-                <Link key={s.label} href={s.href}>
-                  <div className="flex items-center gap-3 border rounded-lg p-4 bg-card hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer h-full">
-                    <span className={`p-3 rounded-lg shrink-0 ${s.color}`}>
-                      <Icon className="w-6 h-6" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-bold">{s.label}</p>
-                      <p className="text-xs text-muted-foreground">{s.text}</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground shrink-0" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Nouveaux projets */}
-      <section className="py-8 bg-muted/20 border-b" data-testid="home-new-projects">
-        <div className="container mx-auto px-4">
-          <div className="border rounded-xl bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-            <span className="p-3 rounded-lg bg-blue-100 text-blue-600 shrink-0 self-start">
-              <Building2 className="w-7 h-7" />
-            </span>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold">Nouveaux projets</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Programmes neufs, villas et appartements sur plan. Promoteurs : publiez votre projet avec le prix de lancement et le plan de paiement dans la description.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
-              <Link href="/annonces?category=Immobilier&search=projet">
-                <Button variant="outline">Voir les projets</Button>
-              </Link>
-              <Link href="/publier">
-                <Button className="bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold">
-                  Publier un projet
-                </Button>
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -381,14 +421,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Catégories détaillées (ordinateur seulement) */}
-      <section className="hidden md:block py-10 border-t bg-background">
+      {/* Catégories détaillées avec sous-catégories */}
+      <section className="py-10 border-t bg-background" data-testid="home-categories">
         <div className="container mx-auto px-4">
           <h2 className="text-xl font-bold mb-6 text-foreground">Catégories populaires</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {categories.map((cat) => {
               const Icon = cat.icon;
-              const stat = stats?.find(s => s.category === cat.id);
+              const stat = stats?.find((s) => s.category === cat.id);
+              const open = expanded.includes(cat.id);
+              const visible = open ? cat.subs : cat.subs.slice(0, SUB_LIMIT);
               return (
                 <div key={cat.id} className="border rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all bg-card group">
                   <Link href={cat.href}>
@@ -403,17 +445,28 @@ export default function Home() {
                     </div>
                   </Link>
                   <ul className="space-y-1">
-                    {cat.subs.map((sub) => (
-                      <li key={sub}>
+                    {visible.map((sub) => (
+                      <li key={subLabel(sub)}>
                         <Link
-                          href={`${cat.href}&search=${encodeURIComponent(sub)}`}
+                          href={subHref(cat.href, sub)}
                           className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                         >
-                          <ArrowRight className="w-3 h-3" /> {sub}
+                          <ArrowRight className="w-3 h-3" /> {subLabel(sub)}
                         </Link>
                       </li>
                     ))}
                   </ul>
+                  {cat.subs.length > SUB_LIMIT && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpanded((prev) => (open ? prev.filter((x) => x !== cat.id) : [...prev, cat.id]))
+                      }
+                      className="text-xs text-muted-foreground hover:text-primary mt-2 block"
+                    >
+                      {open ? "Voir moins" : `Voir plus (+${cat.subs.length - SUB_LIMIT})`}
+                    </button>
+                  )}
                   <Link href={cat.href} className="text-xs font-semibold text-primary hover:underline mt-3 inline-block">
                     Tout voir →
                   </Link>
