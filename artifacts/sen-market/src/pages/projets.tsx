@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -25,11 +25,14 @@ import {
   Building2,
   CalendarClock,
   Check,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   MessageCircle,
   Phone,
   Trash2,
   Wallet,
+  X,
 } from "lucide-react";
 
 type Project = {
@@ -54,6 +57,8 @@ type Project = {
 };
 
 const CITIES = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba", "Diourbel", "Louga", "Tambacounda"];
+
+const NEW_DAYS = 7;
 
 const EMPTY_FORM = {
   title: "",
@@ -80,21 +85,131 @@ async function api<T = unknown>(url: string, method = "GET", body?: unknown): Pr
   return res.json();
 }
 
+function isRecent(createdAt: string): boolean {
+  const t = new Date(createdAt).getTime();
+  if (isNaN(t)) return false;
+  return Date.now() - t < NEW_DAYS * 24 * 60 * 60 * 1000;
+}
+
+function PhotoViewer({
+  photos,
+  index,
+  title,
+  onClose,
+  onChange,
+}: {
+  photos: string[];
+  index: number;
+  title: string;
+  onClose: () => void;
+  onChange: (i: number) => void;
+}) {
+  const touchStartX = useRef<number | null>(null);
+  const total = photos.length;
+
+  const prev = () => onChange((index - 1 + total) % total);
+  const next = () => onChange((index + 1) % total);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onChange((index - 1 + total) % total);
+      if (e.key === "ArrowRight") onChange((index + 1) % total);
+    };
+    window.addEventListener("keydown", onKey);
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = oldOverflow;
+    };
+  }, [index, total, onClose, onChange]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
+      onClick={onClose}
+      onTouchStart={(e) => {
+        touchStartX.current = e.touches[0].clientX;
+      }}
+      onTouchEnd={(e) => {
+        if (touchStartX.current === null || total < 2) return;
+        const diff = e.changedTouches[0].clientX - touchStartX.current;
+        touchStartX.current = null;
+        if (diff > 50) prev();
+        else if (diff < -50) next();
+      }}
+    >
+      <button
+        type="button"
+        aria-label="Fermer"
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25"
+      >
+        <X className="w-6 h-6" />
+      </button>
+
+      {total > 1 && (
+        <button
+          type="button"
+          aria-label="Photo précédente"
+          onClick={(e) => {
+            e.stopPropagation();
+            prev();
+          }}
+          className="absolute left-2 sm:left-6 z-10 h-10 w-10 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+      )}
+
+      <img
+        src={photos[index]}
+        alt={title}
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[85vh] max-w-[94vw] object-contain rounded-lg select-none"
+        draggable={false}
+      />
+
+      {total > 1 && (
+        <button
+          type="button"
+          aria-label="Photo suivante"
+          onClick={(e) => {
+            e.stopPropagation();
+            next();
+          }}
+          className="absolute right-2 sm:right-6 z-10 h-10 w-10 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      )}
+
+      <div className="absolute bottom-5 left-0 right-0 text-center text-white/90 text-sm">
+        {title} · {index + 1}/{total}
+      </div>
+    </div>
+  );
+}
+
 function ProjectCard({
   p,
   canManage,
   pending,
   onApprove,
   onDelete,
+  onOpenPhoto,
 }: {
   p: Project;
   canManage: boolean;
   pending?: boolean;
   onApprove?: () => void;
   onDelete?: () => void;
+  onOpenPhoto: (photos: string[], index: number, title: string) => void;
 }) {
   const waNumber = (p.whatsapp || p.phone || "").replace(/\D/g, "");
   const photos = p.photos ?? [];
+  const isNew = !pending && isRecent(p.createdAt);
 
   return (
     <Card data-testid={`card-project-${p.id}`}>
@@ -106,7 +221,8 @@ function ProjectCard({
                 key={i}
                 src={src}
                 alt={p.title}
-                className="h-48 sm:h-56 rounded-lg object-cover shrink-0"
+                onClick={() => onOpenPhoto(photos, i, p.title)}
+                className="h-48 sm:h-56 rounded-lg object-cover shrink-0 cursor-pointer"
               />
             ))}
           </div>
@@ -115,6 +231,7 @@ function ProjectCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-xl font-bold">{p.title}</h3>
+            {isNew && <Badge className="bg-[#D4AF37] text-[#0A2463] hover:bg-[#D4AF37]">Nouveau</Badge>}
             {pending && <Badge variant="secondary">En attente</Badge>}
           </div>
           <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
@@ -218,6 +335,9 @@ export default function Projets() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [photos, setPhotos] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [viewer, setViewer] = useState<{ photos: string[]; index: number; title: string } | null>(null);
+
+  const openPhoto = (list: string[], index: number, title: string) => setViewer({ photos: list, index, title });
 
   const setField = (key: keyof typeof EMPTY_FORM, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -317,6 +437,7 @@ export default function Projets() {
               canManage
               onApprove={() => approve(p.id)}
               onDelete={() => remove(p.id)}
+              onOpenPhoto={openPhoto}
             />
           ))}
         </div>
@@ -347,9 +468,20 @@ export default function Projets() {
             p={p}
             canManage={isAdmin || p.userId === me?.id}
             onDelete={() => remove(p.id)}
+            onOpenPhoto={openPhoto}
           />
         ))}
       </div>
+
+      {viewer && (
+        <PhotoViewer
+          photos={viewer.photos}
+          index={viewer.index}
+          title={viewer.title}
+          onClose={() => setViewer(null)}
+          onChange={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+        />
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
