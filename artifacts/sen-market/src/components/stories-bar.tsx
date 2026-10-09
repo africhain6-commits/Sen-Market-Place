@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { BadgeCheck, Plus, Trash2, X } from "lucide-react";
+import { BadgeCheck, Pause, Play, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +38,8 @@ type StoryGroup = {
 };
 
 const STORY_DURATION_MS = 5000;
+const TICK_MS = 50;
+const HOLD_DELAY_MS = 200;
 
 async function fetchStories(): Promise<StoryGroup[]> {
   const res = await fetch("/api/stories", { credentials: "include" });
@@ -64,11 +66,19 @@ function StoryViewer({
 }) {
   const [groupIdx, setGroupIdx] = useState(startIndex);
   const [storyIdx, setStoryIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didHold = useRef(false);
+
   const group = groups[groupIdx];
   const story = group?.stories[storyIdx];
+  const isPaused = paused || holding;
 
   const goNext = () => {
     if (!group) return;
+    setProgress(0);
     if (storyIdx < group.stories.length - 1) {
       setStoryIdx(storyIdx + 1);
     } else if (groupIdx < groups.length - 1) {
@@ -80,6 +90,7 @@ function StoryViewer({
   };
 
   const goPrev = () => {
+    setProgress(0);
     if (storyIdx > 0) {
       setStoryIdx(storyIdx - 1);
     } else if (groupIdx > 0) {
@@ -89,17 +100,63 @@ function StoryViewer({
     }
   };
 
+  // Maintenir le doigt = pause, relâcher = reprise
+  const startHold = () => {
+    didHold.current = false;
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    holdTimer.current = setTimeout(() => {
+      didHold.current = true;
+      setHolding(true);
+    }, HOLD_DELAY_MS);
+  };
+
+  const endHold = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    setHolding(false);
+  };
+
+  // Un simple toucher change de story, mais pas après un appui long
+  const handleZone = (action: () => void) => () => {
+    if (didHold.current) {
+      didHold.current = false;
+      return;
+    }
+    action();
+  };
+
+  const zoneProps = {
+    onPointerDown: startHold,
+    onPointerUp: endHold,
+    onPointerLeave: endHold,
+    onPointerCancel: endHold,
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+    style: { WebkitTouchCallout: "none", touchAction: "manipulation" } as React.CSSProperties,
+  };
+
   // Marque le professionnel comme « vu »
   useEffect(() => {
     if (group) onSeen(group.user.id);
   }, [groupIdx]);
 
-  // Passage automatique à la story suivante
+  // Nouvelle story = la barre repart de zéro
   useEffect(() => {
-    if (!group) return;
-    const timer = setTimeout(goNext, STORY_DURATION_MS);
-    return () => clearTimeout(timer);
+    setProgress(0);
   }, [groupIdx, storyIdx]);
+
+  // La barre avance, sauf en pause
+  useEffect(() => {
+    if (isPaused || !story) return;
+    const timer = setInterval(() => setProgress((p) => p + TICK_MS), TICK_MS);
+    return () => clearInterval(timer);
+  }, [isPaused, groupIdx, storyIdx]);
+
+  // Fin du temps = story suivante
+  useEffect(() => {
+    if (progress >= STORY_DURATION_MS) goNext();
+  }, [progress]);
 
   // Touche Échap + blocage du défilement de la page derrière
   useEffect(() => {
@@ -112,6 +169,7 @@ function StoryViewer({
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
+      if (holdTimer.current) clearTimeout(holdTimer.current);
     };
   }, []);
 
@@ -132,20 +190,22 @@ function StoryViewer({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col" role="dialog" aria-modal="true">
-      <style>{`@keyframes story-progress { from { width: 0%; } to { width: 100%; } }`}</style>
-
-      <div className="absolute inset-x-0 top-0 z-10 px-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-6 bg-gradient-to-b from-black/70 to-transparent">
+      <div className="absolute inset-x-0 top-0 z-20 px-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-6 bg-gradient-to-b from-black/70 to-transparent">
         <div className="flex gap-1 mb-3">
           {group.stories.map((s, i) => (
             <div key={s.id} className="h-1 flex-1 rounded-full bg-white/30 overflow-hidden">
-              {i < storyIdx && <div className="h-full w-full bg-white" />}
-              {i === storyIdx && (
-                <div
-                  key={`${groupIdx}-${s.id}`}
-                  className="h-full bg-white"
-                  style={{ animation: `story-progress ${STORY_DURATION_MS}ms linear forwards` }}
-                />
-              )}
+              <div
+                className="h-full bg-white"
+                style={{
+                  width:
+                    i < storyIdx
+                      ? "100%"
+                      : i === storyIdx
+                        ? `${Math.min((progress / STORY_DURATION_MS) * 100, 100)}%`
+                        : "0%",
+                  transition: i === storyIdx ? `width ${TICK_MS}ms linear` : "none",
+                }}
+              />
             </div>
           ))}
         </div>
@@ -167,6 +227,15 @@ function StoryViewer({
               {formatDistanceToNow(new Date(story.createdAt), { locale: fr, addSuffix: true })}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            className="p-2"
+            aria-label={paused ? "Reprendre" : "Mettre en pause"}
+            data-testid="story-pause"
+          >
+            {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+          </button>
           {canDelete && (
             <button type="button" onClick={handleDelete} className="p-2" aria-label="Supprimer la story">
               <Trash2 className="w-5 h-5" />
@@ -179,13 +248,35 @@ function StoryViewer({
       </div>
 
       <div className="relative flex-1 flex items-center justify-center overflow-hidden">
-        <img src={story.imageUrl} alt="" className="max-h-full max-w-full object-contain select-none" />
-        <button type="button" className="absolute inset-y-0 left-0 w-1/3" onClick={goPrev} aria-label="Précédent" />
-        <button type="button" className="absolute inset-y-0 right-0 w-2/3" onClick={goNext} aria-label="Suivant" />
+        <img
+          src={story.imageUrl}
+          alt=""
+          draggable={false}
+          className="max-h-full max-w-full object-contain select-none"
+        />
+        <button
+          type="button"
+          className="absolute inset-y-0 left-0 w-1/3 z-10"
+          onClick={handleZone(goPrev)}
+          aria-label="Précédent"
+          {...zoneProps}
+        />
+        <button
+          type="button"
+          className="absolute inset-y-0 right-0 w-2/3 z-10"
+          onClick={handleZone(goNext)}
+          aria-label="Suivant"
+          {...zoneProps}
+        />
+        {isPaused && (
+          <div className="pointer-events-none absolute z-20 rounded-full bg-black/50 p-4 text-white">
+            <Pause className="w-8 h-8" />
+          </div>
+        )}
       </div>
 
       {story.caption && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-gradient-to-t from-black/70 to-transparent text-white text-sm text-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-gradient-to-t from-black/70 to-transparent text-white text-sm text-center">
           {story.caption}
         </div>
       )}
