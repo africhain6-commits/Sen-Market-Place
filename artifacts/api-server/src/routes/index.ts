@@ -14,6 +14,7 @@ import searchAlertsRouter from "./search_alerts";
 import priceHistoryRouter from "./price_history";
 import courtiersRouter from "./courtiers";
 import storiesRouter from "./stories";
+import projectsRouter from "./projects";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(reportsRouter);
 router.use(searchAlertsRouter);
 router.use(courtiersRouter);
 router.use(storiesRouter);
+router.use(projectsRouter);
 
 export default router;
