@@ -10,3 +10,4 @@ export * from "./listing_events";
 export * from "./price_history";
 export * from "./password_reset_tokens";
 export * from "./stories";
+export * from "./projects";
