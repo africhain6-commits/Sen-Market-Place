@@ -115,6 +115,11 @@ export function MobileBottomNav() {
                   Courtiers & professionnels
                 </button>
               </Link>
+              <Link href="/projets" onClick={() => setMenuOpen(false)}>
+                <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium transition-colors ${isActive("/projets") ? "text-primary" : "text-gray-700"}`}>
+                  Nouveaux projets
+                </button>
+              </Link>
               <Link href="/publicite" onClick={() => setMenuOpen(false)}>
                 <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors">
                   Publicité
