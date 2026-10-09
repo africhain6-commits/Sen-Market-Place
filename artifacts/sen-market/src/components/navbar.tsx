@@ -134,6 +134,9 @@ export function Navbar() {
           <Link href="/courtiers" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-courtiers">
             Courtiers
           </Link>
+          <Link href="/projets" className="text-sm font-medium text-white/85 hover:text-white transition-colors" data-testid="link-projets">
+            Projets
+          </Link>
           <Link href="/carte" className="text-sm font-medium text-white/85 hover:text-white transition-colors flex items-center gap-1" data-testid="link-carte">
             <MapPin className="w-3.5 h-3.5" />
             Carte
