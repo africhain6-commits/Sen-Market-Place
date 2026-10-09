@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { 
-  Home as HomeIcon, 
-  Car, 
-  Briefcase, 
-  Wrench, 
-  Smartphone, 
-  Trees, 
+import { StoriesBar } from "@/components/stories-bar";
+import {
+  Home as HomeIcon,
+  Car,
+  Briefcase,
+  Wrench,
+  Smartphone,
+  Trees,
   Search,
   MapPin,
   Clock,
@@ -20,6 +21,9 @@ import {
   ShieldCheck,
   Star,
   Users,
+  Truck,
+  HardHat,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -82,6 +86,30 @@ const categories = [
     color: "bg-pink-100 text-pink-600",
     href: "/boutiques",
     subs: ["Mode femme", "Mode homme", "Couture sur mesure", "Tissus & Bazin"],
+  },
+];
+
+const SERVICES = [
+  {
+    label: "Emplois",
+    text: "Offres et demandes d'emploi",
+    icon: Briefcase,
+    color: "bg-green-100 text-green-600",
+    href: "/annonces?category=Emplois",
+  },
+  {
+    label: "Livraison",
+    text: "Coursiers et transport de colis",
+    icon: Truck,
+    color: "bg-amber-100 text-amber-600",
+    href: "/annonces?category=Services&search=Livraison",
+  },
+  {
+    label: "Travaux",
+    text: "Maçons, plombiers, électriciens",
+    icon: HardHat,
+    color: "bg-purple-100 text-purple-600",
+    href: "/annonces?category=Services&search=Travaux",
   },
 ];
 
@@ -201,6 +229,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Stories des professionnels */}
+      <div className="container mx-auto px-4 pt-5 empty:hidden">
+        <StoriesBar />
+      </div>
+
       {/* Catégories en une ligne (téléphone seulement) */}
       <section className="md:hidden border-b bg-background py-4">
         <div className="flex gap-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-testid="category-chips">
@@ -215,6 +248,59 @@ export default function Home() {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* Services */}
+      <section className="py-8 bg-background border-b" data-testid="home-services">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold mb-4">Services</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {SERVICES.map((s) => {
+              const Icon = s.icon;
+              return (
+                <Link key={s.label} href={s.href}>
+                  <div className="flex items-center gap-3 border rounded-lg p-4 bg-card hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer h-full">
+                    <span className={`p-3 rounded-lg shrink-0 ${s.color}`}>
+                      <Icon className="w-6 h-6" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-bold">{s.label}</p>
+                      <p className="text-xs text-muted-foreground">{s.text}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground shrink-0" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Nouveaux projets */}
+      <section className="py-8 bg-muted/20 border-b" data-testid="home-new-projects">
+        <div className="container mx-auto px-4">
+          <div className="border rounded-xl bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+            <span className="p-3 rounded-lg bg-blue-100 text-blue-600 shrink-0 self-start">
+              <Building2 className="w-7 h-7" />
+            </span>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold">Nouveaux projets</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Programmes neufs, villas et appartements sur plan. Promoteurs : publiez votre projet avec le prix de lancement et le plan de paiement dans la description.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Link href="/annonces?category=Immobilier&search=projet">
+                <Button variant="outline">Voir les projets</Button>
+              </Link>
+              <Link href="/publier">
+                <Button className="bg-[#D4AF37] text-[#0A2463] hover:bg-[#c9a430] border-0 font-bold">
+                  Publier un projet
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
