@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getGetMeQueryKey } from "@workspace/api-client-react";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BadgeCheck, MapPin, Phone, MessageCircle, Languages, Building2, Search, Store, UserCheck } from "lucide-react";
+import { StoriesBar } from "@/components/stories-bar";
 
 type Pro = {
   id: number;
@@ -82,6 +83,12 @@ export default function Courtiers() {
   const [type, setType] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+
+  // Recherche automatique pendant la frappe
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data: pros, isLoading, isError } = useQuery({
     queryKey: ["courtiers", type, search],
@@ -158,6 +165,8 @@ export default function Courtiers() {
           </Link>
         )}
       </div>
+
+      <StoriesBar />
 
       <form
         className="flex gap-2 mb-4"
