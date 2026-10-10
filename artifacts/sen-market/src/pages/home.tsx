@@ -35,6 +35,16 @@ const HERO_IMAGE = "/couverture.jpg";
 
 const SUB_LIMIT = 6;
 
+// Section « Découvrir le Sénégal » (photos dans public/senegal/)
+const DESTINATIONS = [
+  { name: "Dakar", subtitle: "Monument de la Renaissance africaine", image: "/senegal/dakar.jpg", search: "Dakar" },
+  { name: "Île de Gorée", subtitle: "Ruelles colorées et histoire", image: "/senegal/goree.jpg", search: "Gorée" },
+  { name: "Saint-Louis", subtitle: "Ville coloniale et pirogues", image: "/senegal/saint-louis.jpg", search: "Saint-Louis" },
+  { name: "Saly", subtitle: "Plages et palmiers", image: "/senegal/saly.jpg", search: "Saly" },
+  { name: "Casamance", subtitle: "Mangroves et nature", image: "/senegal/casamance.jpg", search: "Casamance" },
+  { name: "Réserve de Bandia", subtitle: "Safari et baobabs", image: "/senegal/bandia.jpg", search: "Bandia" },
+];
+
 const SEARCH_CATEGORIES = [
   { label: "Tout", value: "" },
   { label: "Immobilier", value: "Immobilier" },
@@ -323,12 +333,12 @@ export default function Home() {
       </section>
 
       {/* Stories des professionnels */}
-      <div className="container mx-auto px-4 pt-5 empty:hidden">
+      <div className="container mx-auto px-4 pt-4 empty:hidden">
         <StoriesBar />
       </div>
 
       {/* Catégories en une ligne (téléphone seulement) */}
-      <section className="md:hidden border-b bg-background py-4">
+      <section className="md:hidden border-b bg-background py-3">
         <div className="flex gap-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-testid="category-chips">
           {chips.map((cat) => {
             const Icon = cat.icon;
@@ -345,7 +355,7 @@ export default function Home() {
       </section>
 
       {/* Annonces récentes */}
-      <section className="py-8 md:py-12 bg-muted/20">
+      <section className="pt-5 pb-8 md:pt-8 md:pb-12 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-4 md:mb-6">
             <h2 className="text-xl font-bold">Annonces récentes</h2>
@@ -421,6 +431,37 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Découvrir le Sénégal */}
+      <section className="py-10 border-t bg-background" data-testid="home-destinations">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-foreground">Découvrir le Sénégal</h2>
+          <p className="text-sm text-muted-foreground mt-1 mb-5">
+            Explorez les annonces près des plus beaux endroits du pays.
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            {DESTINATIONS.map((d) => (
+              <Link
+                key={d.name}
+                href={`/annonces?search=${encodeURIComponent(d.search)}`}
+                className="group relative block aspect-[3/2] overflow-hidden rounded-xl bg-muted"
+              >
+                <img
+                  src={d.image}
+                  alt={d.name}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 text-white">
+                  <h3 className="font-bold text-sm md:text-lg leading-tight">{d.name}</h3>
+                  <p className="text-[11px] md:text-sm text-white/80 line-clamp-1">{d.subtitle}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Catégories détaillées avec sous-catégories */}
       <section className="py-10 border-t bg-background" data-testid="home-categories">
         <div className="container mx-auto px-4">
@@ -440,7 +481,7 @@ export default function Home() {
                       </div>
                       <div>
                         <h3 className="font-bold text-sm group-hover:text-primary transition-colors">{cat.id}</h3>
-                        {stat && <p className="text-xs text-muted-foreground">{stat.count} annonces</p>}
+                        {stat && <p className="text-xs text-muted-foreground">{stat.count} {stat.count > 1 ? "annonces" : "annonce"}</p>}
                       </div>
                     </div>
                   </Link>
