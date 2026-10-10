@@ -40,6 +40,7 @@ type StoryGroup = {
 const STORY_DURATION_MS = 5000;
 const TICK_MS = 50;
 const HOLD_DELAY_MS = 200;
+const MAX_STORY_PHOTOS = 5;
 
 async function fetchStories(): Promise<StoryGroup[]> {
   const res = await fetch("/api/stories", { credentials: "include" });
@@ -306,30 +307,47 @@ export function StoriesBar() {
   const [caption, setCaption] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Une story est créée pour chaque photo choisie (dans l'ordre)
   const publish = async () => {
     if (photos.length === 0) {
-      toast({ variant: "destructive", title: "Photo manquante", description: "Ajoutez une photo pour votre story." });
+      toast({ variant: "destructive", title: "Photo manquante", description: "Ajoutez au moins une photo pour votre story." });
       return;
     }
     setSaving(true);
+    let done = 0;
     try {
-      const res = await fetch("/api/stories", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: photos[0], caption }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error || "Une erreur est survenue");
+      for (const imageUrl of photos) {
+        const res = await fetch("/api/stories", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl, caption }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error((data as { error?: string }).error || "Une erreur est survenue");
+        }
+        done += 1;
       }
-      toast({ title: "Story publiée", description: "Elle restera visible 24 heures." });
+      toast({
+        title: done > 1 ? `${done} stories publiées` : "Story publiée",
+        description: "Elles resteront visibles 24 heures.",
+      });
       setAddOpen(false);
       setPhotos([]);
       setCaption("");
       queryClient.invalidateQueries({ queryKey: ["stories"] });
     } catch (err) {
-      toast({ variant: "destructive", title: "Erreur", description: (err as Error).message });
+      if (done > 0) {
+        // Les photos déjà publiées sont retirées de la liste
+        setPhotos((prev) => prev.slice(done));
+        queryClient.invalidateQueries({ queryKey: ["stories"] });
+      }
+      toast({
+        variant: "destructive",
+        title: done > 0 ? `${done} story publiée${done > 1 ? "s" : ""}, puis erreur` : "Erreur",
+        description: (err as Error).message,
+      });
     } finally {
       setSaving(false);
     }
@@ -339,7 +357,7 @@ export function StoriesBar() {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto pb-3 mb-6" data-testid="stories-bar">
+      <div className="flex gap-4 overflow-x-auto pb-2 mb-1" data-testid="stories-bar">
         {isPro && (
           <button
             type="button"
@@ -408,23 +426,29 @@ export function StoriesBar() {
       )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Ajouter une story</DialogTitle>
-            <DialogDescription>Votre story sera visible pendant 24 heures.</DialogDescription>
+            <DialogTitle>Ajouter des stories</DialogTitle>
+            <DialogDescription>
+              Choisissez jusqu'à {MAX_STORY_PHOTOS} photos : chacune devient une story, visible pendant 24 heures.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <PhotoUploader photos={photos} onChange={(p: string[]) => setPhotos(p.slice(0, 1))} maxPhotos={1} />
+            <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={MAX_STORY_PHOTOS} />
             <Input
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               maxLength={200}
-              placeholder="Texte (facultatif)"
+              placeholder="Texte (facultatif, le même pour toutes les photos)"
             />
           </div>
           <DialogFooter>
             <Button disabled={saving} onClick={publish}>
-              {saving ? "Publication..." : "Publier ma story"}
+              {saving
+                ? "Publication..."
+                : photos.length > 1
+                  ? `Publier ${photos.length} stories`
+                  : "Publier ma story"}
             </Button>
           </DialogFooter>
         </DialogContent>
