@@ -59,20 +59,15 @@ export function PhotoUploader({ photos, onChange, maxPhotos = 10 }: PhotoUploade
 
   const handleFiles = async (files: FileList) => {
     const all = Array.from(files);
+    const received = all.length;
     const remaining = maxPhotos - photos.length;
     const toUpload = all.slice(0, remaining);
     if (toUpload.length === 0) return;
 
-    if (all.length > remaining) {
-      toast({
-        title: "Trop de photos",
-        description: `Seules ${remaining} photo${remaining > 1 ? "s" : ""} sur ${all.length} ${remaining > 1 ? "seront ajoutées" : "sera ajoutée"}.`,
-      });
-    }
-
     setUploadingCount(toUpload.length);
 
     let current = [...photos];
+    let added = 0;
     let failed = 0;
 
     for (const original of toUpload) {
@@ -82,6 +77,7 @@ export function PhotoUploader({ photos, onChange, maxPhotos = 10 }: PhotoUploade
         if (result) {
           current = [...current, `/api/storage${result.objectPath}`];
           onChange(current);
+          added += 1;
         } else {
           failed += 1;
         }
@@ -91,13 +87,14 @@ export function PhotoUploader({ photos, onChange, maxPhotos = 10 }: PhotoUploade
       setUploadingCount((c) => Math.max(0, c - 1));
     }
 
-    if (failed > 0) {
-      toast({
-        variant: "destructive",
-        title: "Envoi incomplet",
-        description: `${failed} photo${failed > 1 ? "s n'ont" : " n'a"} pas pu être envoyée${failed > 1 ? "s" : ""}. Réessayez.`,
-      });
-    }
+    setUploadingCount(0);
+
+    // MESSAGE DE TEST (temporaire)
+    toast({
+      variant: failed > 0 ? "destructive" : undefined,
+      title: "Test photos",
+      description: `Reçues : ${received} · Ajoutées : ${added} · Échecs : ${failed}`,
+    });
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -185,7 +182,7 @@ export function PhotoUploader({ photos, onChange, maxPhotos = 10 }: PhotoUploade
                   {photos.length === 0 ? "Ajouter des photos" : "Ajouter d'autres photos"}
                 </p>
                 <p className="text-xs mt-1">
-                  Sur téléphone : appuyez longtemps sur une photo pour en choisir plusieurs · {maxPhotos - photos.length} photo{maxPhotos - photos.length > 1 ? "s" : ""} restante{maxPhotos - photos.length > 1 ? "s" : ""}
+                  Cliquez pour sélectionner · {maxPhotos - photos.length} photo{maxPhotos - photos.length > 1 ? "s" : ""} restante{maxPhotos - photos.length > 1 ? "s" : ""}
                 </p>
               </div>
               <Button type="button" size="sm" variant="outline" className="mt-1">
