@@ -43,7 +43,8 @@ const DESTINATIONS = [
   { slug: "saint-louis", name: "Saint-Louis", subtitle: "Ville coloniale et pirogues", image: "/senegal/saint-louis.jpg" },
   { slug: "saly", name: "Saly", subtitle: "Plages et palmiers", image: "/senegal/saly.jpg" },
   { slug: "casamance", name: "Casamance", subtitle: "Mangroves et nature", image: "/senegal/casamance.jpg" },
-  { slug: "bandia", name: "Réserve de Bandia", subtitle: "Safari et baobabs", image: "/senegal/bandia.jpg" },
+  { slug: "bandia", name: "Réserve de Bandia", subtitle: "Safari et baobabs", image: "/senegal/bandia.jpg" },  { slug: "lac-rose", name: "Lac Rose", subtitle: "Un lac rose et des dunes", image: "/senegal/lac-rose.jpg" },
+  { slug: "lompoul", name: "Lompoul", subtitle: "Dunes et nuits sous les étoiles", image: "/senegal/lompoul.jpg" },
 ];
 
 const SEARCH_CATEGORIES = [
