@@ -127,6 +127,45 @@ const REGIONS: Region[] = [
       { title: "Le restaurant sur place", text: "Pour faire une pause à l'ombre pendant la visite." },
       { title: "Un combiné avec Saly ou Mbour", text: "Facile à ajouter à un séjour balnéaire sur la Petite Côte." },
     ],
+  },  {
+    slug: "lac-rose",
+    name: "Lac Rose",
+    tagline: "Un lac aux eaux roses et aux dunes dorées",
+    image: "/senegal/lac-rose.jpg",
+    credit: { author: "Issiaga0", license: "CC BY-SA 4.0", url: "https://creativecommons.org/licenses/by-sa/4.0/" },
+    search: "Lac Rose",
+    intro: [
+      "Le Lac Rose, aussi appelé lac Retba, se trouve à environ 35 km au nord-est de Dakar. Son eau prend une teinte rose grâce à une algue microscopique et à son taux de sel très élevé. La couleur est surtout visible en saison sèche.",
+      "Une fine bande de dunes sépare le lac de l'océan. Des ramasseurs de sel y travaillent toute l'année, et le site est devenu une sortie très populaire pour les visiteurs de Dakar. Les environs, comme Niaga et Sangalkam, attirent aussi pour leurs terrains et leurs résidences.",
+    ],
+    highlights: [
+      { title: "Le lac et ses couleurs", text: "Du rose pâle au rose intense selon la lumière et la saison." },
+      { title: "Les ramasseurs de sel", text: "Un travail à la main, que l'on peut observer sur place." },
+      { title: "Les dunes et la plage", text: "Une longue bande de sable entre le lac et l'océan Atlantique." },
+      { title: "Quad, buggy et dromadaire", text: "Des balades très demandées autour du lac." },
+      { title: "Les produits en sel", text: "Le sel du lac et l'artisanat local se vendent sur les rives." },
+      { title: "Un départ facile depuis Dakar", text: "Une demi-journée suffit pour y aller et en profiter." },
+    ],
+  },
+  {
+    slug: "lompoul",
+    name: "Lompoul",
+    tagline: "Un petit désert de dunes au bord de l'océan",
+    image: "/senegal/lompoul.jpg",
+    credit: { author: "Mich-nguyen", license: "CC BY-SA 4.0", url: "https://creativecommons.org/licenses/by-sa/4.0/" },
+    search: "Lompoul",
+    intro: [
+      "Lompoul est un petit désert de dunes de sable orange, sur la Grande Côte, entre Dakar et Saint-Louis. Il se trouve à environ 3 heures de route de Dakar, et l'océan n'est pas très loin.",
+      "On y vient pour dormir sous la tente dans un camp du désert, regarder le coucher et le lever du soleil sur les dunes, et observer un ciel étoilé très clair. C'est une étape facile à combiner avec un voyage vers Saint-Louis.",
+    ],
+    highlights: [
+      { title: "Les dunes de sable", text: "Du sable fin qui change de couleur au fil de la journée." },
+      { title: "Les camps dans le désert", text: "Dormir sous une tente ou une yourte, loin de la ville." },
+      { title: "Balade à dos de dromadaire", text: "L'activité classique pour découvrir les dunes à un rythme tranquille." },
+      { title: "Le coucher de soleil", text: "Un des moments les plus recherchés par les visiteurs." },
+      { title: "Le ciel étoilé", text: "Sans lumière autour, les étoiles sont très visibles." },
+      { title: "Une étape vers Saint-Louis", text: "On peut passer une nuit ici avant de continuer vers le nord." },
+    ],
   },
 ];
 
@@ -164,7 +203,20 @@ export default function RegionPage() {
       </section>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Texte */}
+                {region.credit && (
+          <p className="text-xs text-muted-foreground -mt-3 mb-5">
+            Photo : {region.credit.author},{" "}
+            <a
+              href={region.credit.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              {region.credit.license}
+            </a>{" "}
+            (recadrée et redimensionnée), via Wikimedia Commons
+          </p>
+        )}{/* Texte */}
         <section className="space-y-4">
           {region.intro.map((p, i) => (
             <p key={i} className="text-base md:text-lg text-foreground/90 leading-relaxed">
@@ -246,3 +298,4 @@ export default function RegionPage() {
     </div>
   );
 }
+  
