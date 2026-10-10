@@ -19,6 +19,7 @@ import Admin from "@/pages/admin";
 import Boutiques from "@/pages/boutiques";
 import Courtiers from "@/pages/courtiers";
 import Projets from "@/pages/projets";
+import Region from "@/pages/region";
 import Pub from "@/pages/pub";
 import Modifier from "@/pages/modifier";
 import Carte from "@/pages/carte";
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/boutiques" component={Boutiques} />
         <Route path="/courtiers" component={Courtiers} />
         <Route path="/projets" component={Projets} />
+        <Route path="/region/:slug" component={Region} />
         <Route path="/publicite" component={Pub} />
         <Route path="/modifier/:id" component={Modifier} />
         <Route path="/carte" component={Carte} />
